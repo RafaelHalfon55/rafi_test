@@ -1,0 +1,2458 @@
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 1   
+
+
+C51 COMPILER V9.03, COMPILATION OF MODULE BFM_REV_32_0
+OBJECT MODULE PLACED IN BFM_REV_32_0.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE BFM_REV_32_0.C COMPACT ROM(COMPACT) BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1           
+   2          ////////////////////////////////////////////////////////////////////////
+   3          /////////////////////////////////////////////////////                   //       
+   4                      //VASA APPLIED THECHNOLOGIES LTD. 
+   5                                  // (BFM) 
+   6                                   //// MASTER CPU SOFTWARE
+   7                                   //////////////////////////////////////////////////////////////////////////////////
+   8                                   //////////////////////////////////////////////////////////////////////////////////
+   9                                   ////////////////////FIRST CONSEPT      //////////////////////////////////////////
+  10                                   ////////////////////
+  11                                   ////////////////////    rev 1.0                ///////////////////////////////////////////
+  12                                   ///////////////////     28.12.2011             /////////////////////////////////////////
+  13                                   /////////////////////////////////////////////////////////////////////////////////
+  14                                   /////////////////////////////////////////////////////////////////////////////////
+  15          
+  16          // Target:         C8051F320
+  17          // Tool chain:     Keil C51 
+  18          // Command Line:   None
+  19          //
+  20          // Release 1.0
+  21          //    -Initial Revision 
+  22          //    -28 dec 2011
+  23          //         Rafael halfon
+  24           
+  25          //.........................................
+  26          //***************************
+  27          // LAST UPDATE 12/08/13  TIME: 18:00
+  28          // BY RAFAEL HALFON
+  29          //***************************
+  30          // NOT WORKING WILL CHRAGING
+  31          
+  32          //rev 31.1 09/4/2013
+  33          // add test mode
+  34          //      BUG  FIXED
+  35          //:::::::::::::::::::::::::::::::
+  36          // READ WRIT TO LOCAL MEMORY
+  37          // Seting the monitor   17/8/2012
+  38          //
+  39          // check battrey ()
+  40          //
+  41                                  
+  42          //-----------------------------------------------------------------------------
+  43          // Includes
+  44          //-----------------------------------------------------------------------------
+  45          
+  46          #include <c8051f320.h>                 // SFR declarations
+  47          //#include <stdio.h>
+  48          //#include <string.h>
+  49          #include <LCD_controll_32_0.c>
+  50          #include <Memory_mangment_32_0.c>
+  51          #include <rtc_controll_32_0.c>
+  52          
+  53          //-----------------------------------------------------------------------------
+  54          // 16-bit SFR Definitions for 'F31x
+  55          //-----------------------------------------------------------------------------
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 2   
+
+  56          sfr16 ADC0 = 0xBD;                     // 10-bit ADC0 result
+  57          
+  58          //-----------------------------------------------------------------------------
+  59          // Global CONSTANTS
+  60          //-----------------------------------------------------------------------------
+  61          
+  62          
+  63          #define REV1            'M'
+  64          #define REV2            '0'
+  65          #define REV3            '4'
+  66          ///////////////////////////////
+  67          
+  68          #define Truth   1
+  69          #define False   0
+  70          #define AckChar 'q'
+  71          
+  72          
+  73          
+  74          //#define Blevl_1       750
+  75          //#define Blevl_2       730
+  76          
+  77          
+  78          ///////////////////////////////////////
+  79          
+  80          
+  81          //-----------------------------------------------------------------------------
+  82          // Function PROTOTYPES
+  83          //-----------------------------------------------------------------------------
+  84          
+  85          
+  86          int     atoi                            (void *string);
+  87          //void  Check_LCD               (void);
+  88          
+  89          void    Delay                           (unsigned char);
+  90          void    PORT_Init                       (void);
+  91          void    SPI0_Init                       (void);
+  92          
+  93          //void  Start_LCD               (void);
+  94          void    Send_LCD_comm           (int,char);
+  95          
+  96          void    Timer_Init                      (void);
+  97          
+  98          void    UART0_Init                      (void);
+  99          //void  Monitor_Reset   (void);
+ 100          //void  LCD_Delay               (void);
+ 101          
+ 102          void    Print_LCD                       (void);
+ 103          char    Num_To_Seg                      (char);
+ 104          char    Num_To_Seg_Lower        (char,char);
+ 105          void    Restart_LCD                     (void);
+ 106          void    SEG_care                        (char,char);
+ 107          char    KeyPad                          (void);
+ 108          
+ 109          void    ADC0_Init                       (void);
+ 110          void    CheckInput                      (void);
+ 111          void    Sent_Ack                        (void);
+ 112          void    GO_OUT                          (char,char);
+ 113          //void  LCD_OUT                         (void);
+ 114          void    Reset_LCD                       (void);
+ 115          void    Check_Menu                      (void);
+ 116          
+ 117          //void  Print_SetupScreen       (void);
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 3   
+
+ 118          //void  Print_Info_Screen       (void);
+ 119          
+ 120          void    Tirgom                          (unsigned int);
+ 121          void    Light_Intensity         (char);
+ 122          
+ 123          //void  InputValueFromKeyPad(void);
+ 124          //int   TranslatValue           (void);
+ 125          //void  CleanScreen             (void);
+ 126          void    peep                            (void);
+ 127          void    Longpeep                        (void);
+ 128          void    Reset_Prob                      (void);
+ 129          void    Error                           (char);
+ 130          void    ChackValidProb          (void);
+ 131          void    Get_Thr                         (void);
+ 132          void    ChackSoftProb           (void);
+ 133          char    Sensor_CheckUp          (void);
+ 134          void    BlankLCD                        (void);
+ 135          void    Metering_ON             (void);
+ 136          void    WarmUPSensor            (void);
+ 137          //void  SetSnake                (void);
+ 138          void    Turn_off_Monitor        (void);
+ 139          void    ChackBattry             (void);
+ 140          void    ChackUSB                        (void);
+ 141          //---------------------------------------
+ 142          
+ 143          void    Get_Date_Time           (void);
+ 144          void    Start_Display           (void);
+ 145          char    Fetch_SPI                       (char);
+ 146          //void  Update_TimeDate         (void);
+ 147          void    Update_RTC                      (void);
+ 148          void    PrintLowCharSegment     (void);
+ 149          void    SetUpperFigers          (void);                                   
+ 150          void    GetUpperFigers          (void);
+ 151          void    PCA_Init                        (void);
+ 152          //void  SelectBaby                      (void);
+ 153          void    Display_Last_24hr       (void);
+ 154          void    Cal_Last_24hr           (void);
+ 155          void    UpdateSirealNum         (void);
+ 156          void    PreMetering             (void);
+ 157          void    EndMetering             (void);
+ 158          
+ 159          
+ 160          //----------------------------------------------------
+ 161          
+ 162          //    MEMORY
+ 163          
+ 164          //void  MemAddControl           (char);
+ 165          //void  ReadMemoryBasic         (void);
+ 166          //void  SentMemToTerminal       (void);
+ 167          //char  Memory_Redy                     (void);
+ 168          //void  ReadMemory                      (void);
+ 169          //void  UpdateBasicMem          (void);
+ 170          //void  Write_SetionTo_Mem      (void);
+ 171          //void  DisplayMemory           (void);
+ 172          //char  GetNextAdd                      (void);
+ 173          //void  History                         (void);
+ 174          //void  Open_Memory             (void);
+ 175          //void  Close_Memory            (void);
+ 176          //void  SentToTherminal         (void);
+ 177          
+ 178          //----------------------------------------------------------------            
+ 179          // Global Variables
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 4   
+
+ 180          //-------------------------------------------------------------------------     
+ 181          char BuffLength, CursorClock, Segment=0, Scalibration, ClockQ;
+ 182          unsigned char HtrPwr, PowerSaveCunter, DelayT;//, LightDisplay;
+ 183          
+ 184          //unsigned int DelayT = 0;
+ 185          int LightDisplay;
+ 186          unsigned int MainThrBuff, CompThrBuff, OverDiff; //thermistor    values
+ 187          
+ 188          unsigned int BattryLevel;
+ 189          unsigned int Volume ;
+ 190          unsigned long Sub_Volume;
+ 191          //-------------------------------------------------------------------------
+ 192          // Global Flages
+ 193          //-------------------------------------------------------------------------
+ 194          char Feed_Time, FeedSide, Units, PrevKey, ChargeMode, OK_Flag=0;                //, memory_24_flag=0;
+ 195          
+ 196          char Pos, OutFlag, InFlag, ProbOK, SoftRevOK,   
+ 197                   Menu_Mode, ACK_Flag, NumOfBabies, Baby=1;
+ 198          int      Clock, VolumeOf_24H; 
+ 199          char SlaveRev[3];
+ 200          char SlvEndOfTran, FlowFlag, MeterOnFlag, StabeTime, StabeFlag, SensorWatchDog;
+ 201          char StartTimeStatus, MemoryReadCunter, HistoryMode;
+ 202          //-------------------------------------------------------------------------
+ 203          // Global BITS
+ 204          //-------------------------------------------------------------------------
+ 205          bit Cursor=0;
+ 206          //-----------------------------------------------
+ 207          //          ARRAYS
+ 208          //----------------------------------------------- 
+ 209          
+ 210          char pdata Comm_Buffer[14];     //input buffer 
+ 211          char pdata BuffZ [4];           // translation buffer
+ 212          char pdata LCD_Buffer[16];      //  LCD image
+ 213          int  pdata ThrmDiffBuff[3];     
+ 214          char pdata DateTime[10];        //={8,5,3,2,7,5,2,1,1,3};               // m,10m,H,10H,Y,10Y,M,10M,D,10D
+ 215          char pdata GenBuff[6];
+ 216          char pdata BurthDate[6];  //    ={7,5,1,1,1,2};
+ 217          
+ 218          //--------------------------------------------------
+ 219          // SET PORT PINS
+ 220          //------------------------------------------------
+ 221                                  // PORT 0
+ 222          
+ 223          //sbit  SPI CLK         =       P0^0;   // SPI CLOCK
+ 224          //sbit  SPI MISO        =       P0^1;   // SPI MASTER IN 
+ 225          //sbit  SPI_MOSI        =       P0^2;   // SPI MASTER OUT
+ 226          //sbit  CEX0            =       P0^3;   // display ilumintion
+ 227          //sbit  TX                      =       P0^4;   // UART TRANSMITION
+ 228          //sbit  RX                      =       P0^5;   // UART RECIVER
+ 229          //sbit  unused          =       P0^6;   // unused
+ 230          sbit    WACT_CS         =       P0^7;   // WACT_CS
+ 231          
+ 232          
+ 233                                  // PORT 1
+ 234          
+ 235          sbit    Kpad_7  =       P1^0;   // KEY PAD 7
+ 236          sbit    Kpad_2  =       P1^1;   // KEY PAD 2
+ 237          sbit    Kpad_3  =       P1^2;   // KEY PAD 3
+ 238          sbit    Kpad_4  =       P1^3;   // KEY PAD 4
+ 239          sbit    Kpad_5  =       P1^4;   // KEY PAD 5
+ 240          sbit    Kpad_6  =       P1^5;   // KEY PAD 6 
+ 241          sbit    USB_ON  =       P1^6;   // USB active flag
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 5   
+
+ 242          //sbit  spare   =       P1^7;   // spare
+ 243          
+ 244                                  //PORT 2
+ 245          
+ 246          //sbit  BATTARY         =       P2^0;   // BATTARY SENSOR
+ 247          sbit    Mem_CS          =       P2^1;   // Memory CS
+ 248          sbit    SW_OFF          =       P2^2;   // TURN OFF THE monitor
+ 249          sbit    SWICTH          =       P2^3;   // ON/OFF SWITCH input
+ 250          sbit    Buzzr           =       P2^4;   // Buzzr
+ 251          sbit    LCD_CLK         =       P2^5;   // LCD_clk
+ 252          sbit    LCD_DATA        =       P2^6;   // LCD_DATA  
+ 253          sbit    LCD_CS          =       P2^7;   // LCD_CS 
+ 254          
+ 255                          //PORT 3
+ 256          
+ 257          //sbit C2DAT            =       P3^0;   // FOR LOAD SOFTWARE 
+ 258          
+ 259          
+ 260          
+ 261          
+ 262          ////////////////////////////////////////////////////////////////////
+ 263          
+ 264          //----------------------------------------------------------------------------
+ 265          //-----------------------------------------------------------------------------
+ 266          // MAIN Routine
+ 267          //-----------------------------------------------------------------------------
+ 268          //---------------------------------------------------------------------------------
+ 269          void main (void)
+ 270          {
+ 271   1      int a;
+ 272   1      
+ 273   1              EA = 0;
+ 274   1              PCA0MD = 0x00;                  // WDTE = watchdog Disenable)
+ 275   1      
+ 276   1      
+ 277   1              // Initialize Internal Oscillator//
+ 278   1              //----------------------------
+ 279   1              REG0CN    = 0x80;  //voltage regolator not active       
+ 280   1      
+ 281   1          CLKMUL    = 0x80;
+ 282   1          for (a = 0; a < 20; a++);    // Wait 5us for initialization
+ 283   1          CLKMUL    |= 0xC0;
+ 284   1          while ((CLKMUL & 0x20) == 0);
+ 285   1          CLKSEL    = 0x02;
+ 286   1              OSCICN    = 0x83;
+ 287   1      
+ 288   1          VDM0CN    = 0x80;
+ 289   1          for (a = 0; a < 350; a++);  // Wait 100us for 
+ 290   1      
+ 291   1              RSTSRC  = 0x04;         // Enable missing clock detector
+ 292   1      
+ 293   1              PORT_Init();            // Initialize Port I/O  
+ 294   1              UART0_Init();                   // Initialize UART0
+ 295   1              ADC0_Init ();                   // Initialize ANALOG TO DIGIDAL  
+ 296   1              SPI0_Init();                    // Initialize SPI
+ 297   1              Timer_Init();                   // Initialize Timer0
+ 298   1              PCA_Init();                             // Initialize PCA for display light control
+ 299   1      
+ 300   1      //////--------------------
+ 301   1      /// INTERAPT ENABLE AND PRIORITY
+ 302   1      //////------------------------------
+ 303   1      
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 6   
+
+ 304   1              IE              = 0x30;         //enable interapt of:  TIMER2, UART, 
+ 305   1              IP              = 0x30;         //SET PRIORITY FOR:      TIMER2, UART
+ 306   1              EIE1    = 0x08;         //extended interrupt for ADC, SMBUS  0x09
+ 307   1      //      EIP1    = 0x01;         //set SMBUS priority
+ 308   1      //      IE              = 0xf2;
+ 309   1              EA = 1;                         // enable global interrupts     
+ 310   1      //////////////////////////////////////////
+ 311   1      //      MemoryReadCunter=1;       // the firs record on memory is 1
+ 312   1              Feed_Time=0;
+ 313   1              FeedSide=0;
+ 314   1              Pos=0;
+ 315   1              OutFlag=0;
+ 316   1              InFlag=0;
+ 317   1      //      More_then_100_flag=0;
+ 318   1              Menu_Mode=0;
+ 319   1              Units =0;
+ 320   1              ACK_Flag=0;
+ 321   1      //      SecClock=0;
+ 322   1      //      MinClock=0;
+ 323   1              Clock=0;          //**********************************
+ 324   1              NumOfBabies=1;
+ 325   1              SlvEndOfTran=0;
+ 326   1              FlowFlag=0;
+ 327   1              MeterOnFlag=0;
+ 328   1              SensorWatchDog=0;
+ 329   1              Volume=0;
+ 330   1              Sub_Volume=0;
+ 331   1              HtrPwr=65;
+ 332   1              PowerSaveCunter=0;
+ 333   1              HistoryMode=0;
+ 334   1              LightDisplay=125;
+ 335   1      
+ 336   1      // printing to RS232 '$MR%'     
+ 337   1              SBUF0 = '$';
+ 338   1              Delay (2);
+ 339   1              SBUF0 = 'M';
+ 340   1              Delay (2);
+ 341   1              SBUF0 = 'R';
+ 342   1              Delay (2);
+ 343   1              SBUF0 = '%';
+ 344   1              Delay (2);
+ 345   1      //      Led=0;
+ 346   1      //      WACT_CS=0;
+ 347   1              WACT_CS=1;               // open SPI RTc chanell
+ 348   1              Fetch_SPI (0x58);        // reset rtc
+ 349   1              Fetch_SPI (0x10);
+ 350   1              WACT_CS=0;
+ 351   1              Get_Date_Time();
+ 352   1              Restart_LCD();
+ 353   1              Reset_Prob ();  
+ 354   1              ReadMemoryBasic ();
+ 355   1      //      ChargeMode=0;
+ 356   1              ChackBattry ();
+ 357   1      
+ 358   1      //////////////////////////////////////////////////////////////////////////////////////////////////////////
+             -//////////////////////
+ 359   1      //***************************************************************
+ 360   1      //                      E X E C U T I V E *********************************
+ 361   1      //***************************************************************
+ 362   1      
+ 363   1              while(1){
+ 364   2      //                       PCA0CPH4 = 0xFF;               // set WD interval 
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 7   
+
+ 365   2                               if(SWICTH) Turn_off_Monitor();                  
+ 366   2                               if (InFlag == 5) InFlag = 0, CheckInput();
+ 367   2                               if(ChargeMode==1){
+ 368   3                                                              /// for chargin sign on the dark LCD                                                                                                                            
+ 369   3                                                                      if(ClockQ > 40){                  // timing 40 = 0.5 secend
+ 370   4                                                                                                      if(a++ > 3)a=0;
+ 371   4                                                                                                      ClockQ=0;                                                                                               
+ 372   4                                                                                                      BlankLCD ();     // clean LCD buffer                                                            
+ 373   4                                                                                                      SEG_care (6,1);                                                                 
+ 374   4                                                                                                      if(a==1) SEG_care (9,1);        
+ 375   4                                                                                                      if(a==2) SEG_care (9,1), SEG_care (8,1);        
+ 376   4                                                                                                      if(a==3) SEG_care (9,1), SEG_care (8,1), SEG_care (7,1);
+ 377   4                                                                                                      Print_LCD ();
+ 378   4                                                                                              }
+ 379   3                                                                       }
+ 380   2                                      else Check_Menu();
+ 381   2                               SetUpperFigers ();
+ 382   2                               ChackUSB();
+ 383   2      
+ 384   2              //               if(Menu_Mode==0 |Menu_Mode==10) Get_Date_Time();
+ 385   2                              
+ 386   2      //====================================================================
+ 387   2      ///  C L O C K          
+ 388   2      //===================================================
+ 389   2      
+ 390   2              
+ 391   2              if(Clock > 400){         // 400 ==> 5 seconds
+ 392   3                                                      if((Menu_Mode==0 || Menu_Mode==10) & !HistoryMode )  Get_Date_Time();
+ 393   3                                                                                                                                                                                                              
+ 394   3                                                      Clock=0;                        
+ 395   3                                                      ChackBattry ();
+ 396   3      
+ 397   3                                                      // counting feed time and memories the begining minute
+ 398   3                                                      if((DateTime[0] != StartTimeStatus) && MeterOnFlag){
+ 399   4                                                                                                                                                              Feed_Time++;
+ 400   4                                                                                                                                                              StartTimeStatus = DateTime[0];
+ 401   4                                                                                                                                                              PowerSaveCunter=0;                         // reset power save counter
+ 402   4                                                                                                                                                              }
+ 403   3                                                      if(PowerSaveCunter++ >120 & ChargeMode==0 ){                                     //  120===> 10 MINUTE
+ 404   4                                                                                                                                              Longpeep();                                             
+ 405   4                                                                                                                                              SW_OFF=0;  //Turn_off_Monitor 
+ 406   4                                                                                                                                      }
+ 407   3                                      
+ 408   3                                              }
+ 409   2              if(Cursor)SensorWatchDog++;
+ 410   2              if(SensorWatchDog > 5 && MeterOnFlag) Error(8);                 //PROBE DISCONNECTED
+ 411   2                      }
+ 412   1      }               
+ 413            //-----------------------------------
+ 414           /////  END MAIN ROUTIN
+ 415           //----------------------------------
+ 416          
+ 417          /////-------------------------------------------------------------------
+ 418          /////           GLOBAL ROUTINE
+ 419          ////------------------------------------------------------------------------
+ 420          
+ 421                  
+ 422          
+ 423          //-----------------------------------------------------------------------------
+ 424          // Initialization Subroutines
+ 425          //-----------------------------------------------------------------------------
+ 426          
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 8   
+
+ 427          //-----------------------------------------------------------------------------
+ 428          // PORT_Init
+ 429          //-----------------------------------------------------------------------------
+ 430          // Configure the Crossbar and GPIO ports.
+ 431          //
+ 432          // P0.4   digital   push-pull    UART TX
+ 433          // P0.5   digital   open-drain   UART RX
+ 434          //
+ 435          //-----------------------------------------------------------------------------
+ 436          void PORT_Init (void)
+ 437          {   
+ 438   1      ///                     PORT  0
+ 439   1      //      P0MDIN  = 0xff;         //configure pin          default=1      1=digital       0=analog        
+ 440   1      //      P0              = 0;            //configure pin as logic high                   
+ 441   1              P0MDOUT = 0x9d;         //configure pin as puhspull      default=0  1 for pushpull 0 opne drain
+ 442   1      
+ 443   1      
+ 444   1      //                      PORT 1
+ 445   1      
+ 446   1      //      P1MDIN  = 0xff;         //configure pin as digital                      digital         
+ 447   1      //      P1              = 0;            //configure pin as logic high           default=1
+ 448   1      //      P1MDOUT = 0xe0;         //configure pin as puhspull                     default=0 1= pusepull
+ 449   1      //      P0SKIP  = 0;            //configure pin to spishel signal       default=0
+ 450   1      
+ 451   1      //                      PORT  2
+ 452   1                              
+ 453   1              P2MDIN  = 0xfe;         //configure pin 2-0 AS ANALOG INPUT
+ 454   1      //      P2              = 0;            //configure pin as logic high           
+ 455   1              P2MDOUT = 0xf6;         //configure pin as puhspull=1                   
+ 456   1              P2SKIP  = 0x01;         //skip pins for analog signal   
+ 457   1                              
+ 458   1      //                      PORT 3
+ 459   1      
+ 460   1      //      P3MDIN  = 0xff;         //for LCD       
+ 461   1      //      P3              = 0;            //configure pin as logic high                   
+ 462   1      //      P3MDOUT = 0x1a;         //configure pins as puhspull    
+ 463   1       
+ 464   1              XBR0    = 0x03;                     // Enable UART on P0.4(TX) and P0.5(RX)
+ 465   1                                                                                      // & SPI   P0.0=CLK     P0.1=MISO       P0.2=MOSI
+ 466   1                                                                              
+ 467   1              XBR1    = 0xc1;                     // Enable crossbar & disable weak pull-ups +ENABLE PWM
+ 468   1      
+ 469   1      }
+ 470          
+ 471          
+ 472          
+ 473          
+ 474          ///------------------------------------------------------------
+ 475          // Configure the UART0 using Timer1, for <BAUDRATE> and 8-N-1.
+ 476          //-----------------------------------------------------------------------------
+ 477          void UART0_Init (void)
+ 478          {
+ 479   1              SCON0   = 0x10;         // 8-bit variable bit rate
+ 480   1      //      TCON    = 0x40;         // turen on timer 1
+ 481   1      //      TMOD    = 0x20;     // timer 1 in 8-bit autoreload 
+ 482   1      //      TH1             = 0x2b;         // baud rate 4800
+ 483   1      }
+ 484          
+ 485          
+ 486          //-----------------------------------------------------------------------------
+ 487          // Configures ADC0 to make single-ended analog measurements on Port 1 according
+ 488          // to the values of <ANALOG_INPUTS> .
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 9   
+
+ 489          //
+ 490          //-----------------------------------------------------------------------------
+ 491          void ADC0_Init (void)
+ 492          {
+ 493   1              ADC0CN = 0xC0;                  // ADC0 enable SAMPLE ON ADC0BUSY       
+ 494   1              ADC0CF = 0xC0;                                  // Set SAR clock to 1MHz
+ 495   1              AMX0N = 0x1F;                   // ADC0 negative input = GND
+ 496   1          AMX0P = 0x08;                       // battery pin
+ 497   1              REF0CN = 0x08;                  //  VREF = VDD
+ 498   1      }
+ 499          
+ 500          
+ 501          
+ 502          
+ 503          //-----------------------------------------------------------------------------
+ 504          // Configures SPI0 to use 3-wire Single Master mode. The SPI timing is
+ 505          // configured for Mode 0,0 (data centered on first edge of clock phase and
+ 506          // SCK line low in idle state).
+ 507          //
+ 508          //-----------------------------------------------------------------------------
+ 509          void SPI0_Init(void)
+ 510          {
+ 511   1              SPI0CFG   = 0x40;       // Enable the SPI as a Master MODE 0
+ 512   1                              // CKPHA = '0', CKPOL = '0'
+ 513   1              SPI0CN    = 0x01;   // 3-wire Single Master, SPI enabled
+ 514   1              SPI0CKR   =     0x03;   // spi frequency 1MHz=0x0b   0x03=3MHz
+ 515   1      }
+ 516          
+ 517          //-----------------------------------------------------------------------------
+ 518          // Timer_Init
+ 519          //-----------------------------------------------------------------------------
+ 520          
+ 521          void Timer_Init(void)
+ 522          {
+ 523   1      
+ 524   1      //      TH0     = 0xcf;         //timer set for LCD 250KHZ      
+ 525   1              TH1             = 0x98;         // baud rate 4800=0x2b///  baud rate 9600 =0x98 for 320  4800 = 0x30
+ 526   1              TMOD    = 0x22;         // Timer0 in 8-bit mode & Timer1 in 8-bit mode
+ 527   1              CKCON   = 0x04;         // Timer0 uses system clkc      
+ 528   1      
+ 529   1              TMR2RLH = 0x9b;         // set to 40Hz . 25mS
+ 530   1              TMR2CN  = 0x04;     // Enable Timer2 in auto-reload mode
+ 531   1      
+ 532   1      //      TH0 = 0xf6; //0xf6;     //=100uS                        //0xfd; = 25uS
+ 533   1      //      TL0 = 0x69;     //=100uS                                //0xab; = 25uS
+ 534   1      
+ 535   1      
+ 536   1              TR0     = 0;                    // turn on timer 0
+ 537   1              TR1 = 1;                        // turn on timer 1
+ 538   1      
+ 539   1      
+ 540   1      }
+ 541          
+ 542          
+ 543          
+ 544          //-----------------------------------------------------------------------------
+ 545          // PMW configortion
+ 546          //-----------------------------------------------------------------------------
+ 547          
+ 548          void PCA_Init(void)
+ 549          {
+ 550   1          
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 10  
+
+ 551   1          PCA0CN      = 0x40;                 //PCA Enable
+ 552   1              PCA0MD          = 0x80;                 // WDTE = watchdog Disenable)
+ 553   1          PCA0CPM0    = 0x42;                 // pulse width modulation enable //0x42
+ 554   1          PCA0CPH0    = 125;                  // pwm=5/255
+ 555   1      
+ 556   1      //    PCA0CN     =  0x40;         //****                // PCA counter enable
+ 557   1       //   PCA0MD    &= ~0x40 ;        //****                // Watchdog timer disabled-clearing bit 6
+ 558   1      //    PCA0MD    &=  0xF1;                //**** // timebase selected - System clock / 12
+ 559   1      //    PCA0CPL4   =  0xFF;                //**** // Offset value
+ 560   1      
+ 561   1      
+ 562   1      //      PCA0MD  &= ~0x40;         //****      // WDTE = 0 (clear watchdog timer
+ 563   1                                     //****      // enable)
+ 564   1      //      PCA0L    = 0x00;            //****      // Set lower byte of PCA counter to 0  
+ 565   1      //      PCA0H    = 0x00;            //****      // Set higher byte of PCA counter to 0
+ 566   1      //      PCA0CPL4 = 0xFF;            //****      // Write offset for the WDT 
+ 567   1      //      PCA0MD  |= 0x40;            //****      // enable the WDT
+ 568   1                                              
+ 569   1              
+ 570   1      
+ 571   1      }
+ 572          
+ 573          /////////////////////////////////////////////////////////////////// 
+ 574          
+ 575           
+ 576          //---------------------------------------
+ 577          // delay subroutine for 250uS
+ 578          //---------------------------------------
+ 579          void Delay (unsigned char z)
+ 580          {
+ 581   1              DelayT = z;
+ 582   1              while (DelayT > 1) ;
+ 583   1                      
+ 584   1      
+ 585   1      }
+ 586          
+ 587          
+ 588          
+ 589          //---------------------------------------
+ 590          // Get Start Display 
+ 591          //---------------------------------------
+ 592          void Start_Display()
+ 593          {
+ 594   1              Feed_Time=0;
+ 595   1              Volume=0;
+ 596   1      //      FeedSide=0;
+ 597   1              // units
+ 598   1              if(Units)SEG_care (10,1);         //fl+oz ON
+ 599   1                      else SEG_care (12,1);     //ml ON
+ 600   1      
+ 601   1              // bobs side
+ 602   1              SEG_care (2,1);   //R ON
+ 603   1              SEG_care (4,1);   //L ON
+ 604   1              FeedSide=0;
+ 605   1              SEG_care (1,1);   //[] R ON
+ 606   1              SEG_care (3,0);   //[]L OFF
+ 607   1      
+ 608   1      
+ 609   1              SEG_care(6,1);     //battry simbol ON
+ 610   1              Get_Date_Time();
+ 611   1      
+ 612   1              SetUpperFigers();
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 11  
+
+ 613   1              SEG_care(5,1);     //decimal point
+ 614   1      
+ 615   1              SEG_care (19,0);         // birth segment OFF
+ 616   1      //      Cursor=0;
+ 617   1              SEG_care (21,0);  //setup OFF
+ 618   1              ChackBattry();
+ 619   1      
+ 620   1      
+ 621   1      }
+ 622          
+ 623          
+ 624          
+ 625          //---------------------------------------------
+ 626          //       Chack Battry
+ 627          
+ 628          //---------------------------------------------
+ 629          
+ 630          void ChackBattry ()
+ 631          {
+ 632   1              SEG_care (6,1);
+ 633   1              AD0BUSY =1;
+ 634   1              while (AD0INT);
+ 635   1      //      if(USB_ON) BattryLevel=800;
+ 636   1      // FACTOR (3.2 / 1000)X2                        
+ 637   1              if(BattryLevel >= 730){                   // > 4.67 volt
+ 638   2                                                              SEG_care (7,1);
+ 639   2                                                              SEG_care (8,1);
+ 640   2                                                              SEG_care (9,1);
+ 641   2                                                              }
+ 642   1              if(BattryLevel < 730){                          // < 4.5 volt   
+ 643   2                                                              SEG_care (7,0);
+ 644   2                                                              SEG_care (8,1);
+ 645   2                                                              SEG_care (9,1);
+ 646   2                                                      }
+ 647   1              if(BattryLevel < 600){                  // < 3.9 volt           
+ 648   2                                                              SEG_care (7,0);
+ 649   2                                                              SEG_care (8,0);
+ 650   2                                                              SEG_care (9,1);
+ 651   2                                                                                      }
+ 652   1              if(BattryLevel < 550){                  // < 3.5 volt           
+ 653   2                                                              SEG_care (7,0);
+ 654   2                                                              SEG_care (8,0);
+ 655   2                                                              SEG_care (9,0);
+ 656   2                                                              Longpeep();                                                                     
+ 657   2                                                              SW_OFF = 0;                                               
+ 658   2                                                      }
+ 659   1              ChargeMode=0;
+ 660   1              if(BattryLevel > 860){
+ 661   2                                                              if(USB_ON) ChargeMode=2;
+ 662   2                                                              else{
+ 663   3                                                                              ChargeMode=1;
+ 664   3                                                                              PCA0CPM0  = 0x40;       //TURN OFF LCD
+ 665   3                                                                              BlankLCD ();
+ 666   3                                                                              Print_LCD ();
+ 667   3                                                                      }
+ 668   2      
+ 669   2                                                        }      
+ 670   1      //      if(BattryLevel > 860 & !USB_ON){        
+ 671   1      //                                                                      PCA0CPM0  = 0x40;       //TURN OFF LCD                                            
+ 672   1      //                                                                      ClockQ = 100;
+ 673   1      //                                                                      ChargeMode=2;
+ 674   1      //                                                                      }
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 12  
+
+ 675   1              if(!ChargeMode){
+ 676   2                                              PCA0CPM0  = 0x42;         //TURN ON LCD
+ 677   2                                              PCA0CPH0  = 125;
+ 678   2      //                                      ChargeMode=0;
+ 679   2                                              }                                                                                       
+ 680   1                                                                                      
+ 681   1       }
+ 682          
+ 683          ///////////////////////////////////////////////////
+ 684          //translate numbers to 7 segment UPER numberse
+ 685          ///////////////////////////////////////
+ 686          
+ 687          char Num_To_Seg (char num)
+ 688          {
+ 689   1      char SEG;
+ 690   1      
+ 691   1      //      if(!Cursor & FigureID==Pos &CursorON) SEG=0x10; //cursor
+ 692   1      //      else{   
+ 693   1                      switch(num){
+ 694   2                                              case 0: SEG=0xd7; break;                                                                                                                                                        
+ 695   2                                              case 1: SEG=0x06; break;
+ 696   2                                              case 2: SEG=0xe3; break;
+ 697   2                                              case 3: SEG=0xa7; break;                                                                                                                                                        
+ 698   2                                              case 4: SEG=0x36; break;
+ 699   2                                              case 5: SEG=0xb5; break;
+ 700   2                                              case 6: SEG=0xf5; break;                                                                                                                                                        
+ 701   2                                              case 7: SEG=0x07; break;
+ 702   2                                              case 8: SEG=0xf7; break;
+ 703   2                                              case 9: SEG=0xb7; break;
+ 704   2                                              case 99:SEG=0x00; break;
+ 705   2                                              
+ 706   2                                              case 11: SEG=0xf1; break;  //E
+ 707   2                                              case 12: SEG=0x60; break;  //r
+ 708   2                              //              case 13: SEG=0xe0; break;  // L
+ 709   2                              //              case 14: SEG=0xc6; break; //o                   
+ 710   2                                              default: SEG=0xd7;
+ 711   2                                      }
+ 712   1      //               }
+ 713   1              return(SEG);                                                                               
+ 714   1              
+ 715   1      }
+ 716          
+ 717          
+ 718          
+ 719          ///////////////////////////////////////////////////
+ 720          //translate numbers to 7 segment big numbers
+ 721          ///////////////////////////////////////
+ 722          
+ 723          char Num_To_Seg_Lower (char num, char Pos)
+ 724          {
+ 725   1      char SEG;
+ 726   1      
+ 727   1              if((Pos==Segment) && Cursor) SEG=0x00;  //cursor
+ 728   1              else{
+ 729   2              
+ 730   2                      switch(num){
+ 731   3                                              case 0: SEG=0x5f; break;
+ 732   3                                              case 1: SEG=0x50; break;                                                                                                                                                        
+ 733   3                                              case 2: SEG=0x6b; break;
+ 734   3                                              case 3: SEG=0x79; break;
+ 735   3                                              case 4: SEG=0x74; break;                                                                                                                                                        
+ 736   3                                              case 5: SEG=0x3d; break;
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 13  
+
+ 737   3                                              case 6: SEG=0x3f; break;
+ 738   3                                              case 7: SEG=0x58; break;                                                                                                                                                        
+ 739   3                                              case 8: SEG=0x7f; break;
+ 740   3                                              case 9: SEG=0x7d; break;                                                                                
+ 741   3                                              case 20:SEG=0x36; break;   //h
+ 742   3                                              case 21:SEG=0x22; break;   //r
+ 743   3                                              case 99:SEG=0x00; break;
+ 744   3                                              default: SEG=0x5f;                              
+ 745   3                                              }
+ 746   2                }
+ 747   1              return(SEG);                                                                               
+ 748   1                                      
+ 749   1                                      
+ 750   1      }
+ 751          
+ 752          void SEG_care (char Dcod,char ON)
+ 753          {
+ 754   1      char a;
+ 755   1      
+ 756   1              switch(Dcod){
+ 757   2                                                      
+ 758   2                                      case 1: a =     LCD_Buffer[0];
+ 759   2                                                      if(ON) LCD_Buffer[0] = a |0x08;  //R[] T6
+ 760   2                                                              else LCD_Buffer[0] = a & 0xf7;                                                  
+ 761   2                                                      break; 
+ 762   2                                                       
+ 763   2                                      case 2: a =     LCD_Buffer[1];
+ 764   2                                                      if(ON)LCD_Buffer[1] = a|0x08;    //R R
+ 765   2                                                              else LCD_Buffer[1] = a &0xf7;
+ 766   2                                                      break;
+ 767   2                                                                                                                                                                                                              
+ 768   2                                      case 3: a =     LCD_Buffer[2];
+ 769   2                                                      if(ON)LCD_Buffer[2] = a|0x08;    //L [] T5
+ 770   2                                                              else LCD_Buffer[2] = a &0xf7;
+ 771   2                                                      break;
+ 772   2                                                        
+ 773   2                                      case 4: a =     LCD_Buffer[3];
+ 774   2                                                      if(ON)LCD_Buffer[3] = a|0x08;    //L L
+ 775   2                                                              else LCD_Buffer[3] = a&0xf7;
+ 776   2                                                      break;
+ 777   2                                      
+ 778   2                                      case 5: a =     LCD_Buffer[4];
+ 779   2                                                      if(ON) LCD_Buffer[4] = a|0x08;   //decimal point uper P1
+ 780   2                                                              else LCD_Buffer[4] = a&0xf7;
+ 781   2                                                      break;
+ 782   2       //--------------------------------------------------------------------------
+ 783   2                                                        
+ 784   2                                      case 6: a = LCD_Buffer[5];
+ 785   2                                                       if(ON) LCD_Buffer[5] = a|0x01;  // battrey     T1
+ 786   2                                                              else LCD_Buffer[5] = a &0xfe;                           
+ 787   2                                                      break;                          
+ 788   2                                       
+ 789   2                                      case 7: a = LCD_Buffer[5];
+ 790   2                                                       if(ON)LCD_Buffer[5] = a|0x02;  // full battrey    T2
+ 791   2                                                              else LCD_Buffer[5] = a&0xfd;
+ 792   2                                                       break;
+ 793   2      
+ 794   2                                      case 8: a = LCD_Buffer[5];
+ 795   2                                                      if(ON) LCD_Buffer[5] = a|0x04; // medume battery          T3
+ 796   2                                                              else LCD_Buffer[5] = a&0xfb;
+ 797   2                                                       break;
+ 798   2      
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 14  
+
+ 799   2                                      case 9: a = LCD_Buffer[5];
+ 800   2                                                       if(ON) LCD_Buffer[5] = a|0x08;  // Low battery T4
+ 801   2                                                              else LCD_Buffer[5] = a &0xf7;
+ 802   2                                                       break;
+ 803   2      
+ 804   2                                      case 10: a = LCD_Buffer[5];
+ 805   2                                                       if(ON) LCD_Buffer[5] = a|0x30;  //fl+oz         S10+S9
+ 806   2                                                              else LCD_Buffer[5] = a &0xcf;
+ 807   2                                                       break;
+ 808   2      
+ 809   2      //                              case 11: a = LCD_Buffer[5];
+ 810   2      //                                               if(ON) LCD_Buffer[5] = a|0x20;  //oz    S9
+ 811   2      //                                                      else LCD_Buffer[5] = a &0xdf;
+ 812   2      //                                               break;                 
+ 813   2                                      
+ 814   2                                      case 12:a = LCD_Buffer[5];
+ 815   2                                                      if(ON) LCD_Buffer[5] = a|0x40;  //ml    S8
+ 816   2                                                              else LCD_Buffer[5] = a& 0xbf;
+ 817   2                                                       break;
+ 818   2                                      case 13: a = LCD_Buffer[5];
+ 819   2                                                      if(ON) LCD_Buffer[5] = a|0x80;  //Units         S7
+ 820   2                                                              else LCD_Buffer[5] = a & 0x7f;
+ 821   2                                                       break;
+ 822   2      
+ 823   2        //------------------------------------------------------------
+ 824   2                                      case 14: a = LCD_Buffer[6];
+ 825   2                                                       if(ON) LCD_Buffer[6] = a|0x80;  //USB P5
+ 826   2                                                              else LCD_Buffer[6] = a&0x7F;
+ 827   2                                                       break;
+ 828   2      
+ 829   2                                      case 15: a = LCD_Buffer[7];
+ 830   2                                                       if(ON) LCD_Buffer[7] = a|0x80;  //Time S6
+ 831   2                                                              else LCD_Buffer[7] = a&0x7F;
+ 832   2                                                       break;
+ 833   2                                      case 16: a = LCD_Buffer[8];
+ 834   2                                                       if(ON) LCD_Buffer[8] = a|0x80; //coln  P4
+ 835   2                                                              else LCD_Buffer[8] = a&0x7F; 
+ 836   2                                                       break;
+ 837   2      
+ 838   2                                      case 17: a = LCD_Buffer[9];
+ 839   2                                                       if(ON) LCD_Buffer[9] = a|0x80; //Babies  S5
+ 840   2                                                              else LCD_Buffer[9] = a&0x7f; 
+ 841   2                                                       break;
+ 842   2      
+ 843   2                                      case 18: a = LCD_Buffer[10];
+ 844   2                                                       if(ON) LCD_Buffer[10] = a|0x80; //Date S4
+ 845   2                                                              else LCD_Buffer[10] = a&0x7f; 
+ 846   2                                                       break;
+ 847   2      
+ 848   2                                      case 19: a = LCD_Buffer[11];
+ 849   2                                                       if(ON) LCD_Buffer[11] = a|0x80; //Birth  S3
+ 850   2                                                              else LCD_Buffer[11] = a&0x7f; 
+ 851   2                                                       break;
+ 852   2                      
+ 853   2                                      case 20: a = LCD_Buffer[12];
+ 854   2                                                       if(ON) LCD_Buffer[12] = a|0x80; //point P3
+ 855   2                                                              else LCD_Buffer[12] = a&0xfe; 
+ 856   2                                                       break;
+ 857   2      
+ 858   2                                      case 21: a = LCD_Buffer[13];
+ 859   2                                                       if(ON) LCD_Buffer[13] = a|0x80; //Setup  S2
+ 860   2                                                              else LCD_Buffer[13] = a&0x7f; 
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 15  
+
+ 861   2                                                       break;
+ 862   2      
+ 863   2                                      case 22: a = LCD_Buffer[14];
+ 864   2                                                       if(ON) LCD_Buffer[14] = a|0x80; //point P2
+ 865   2                                                              else LCD_Buffer[14] = a&0x7f; 
+ 866   2                                                       break;
+ 867   2      
+ 868   2                                      case 23: a = LCD_Buffer[15];
+ 869   2                                                       if(ON) LCD_Buffer[15] = a|0x80; //Time S1
+ 870   2                                                              else LCD_Buffer[15] = a&0x7f; 
+ 871   2                                                       break; 
+ 872   2                                              
+ 873   2                      
+ 874   2                                      }
+ 875   1      
+ 876   1      }
+ 877          
+ 878                  
+ 879          //-----------------------------------------------------------------------------
+ 880          // BUZZER PEEPS SORT  
+ 881          //-----------------------------------------------------------------------------
+ 882           void peep() 
+ 883           {
+ 884   1      int a, b;
+ 885   1      
+ 886   1      
+ 887   1              for(a=0; a<200 ;a++){                                            //200
+ 888   2                              for(b=0;b<300;b++);             //200                           
+ 889   2                                                      Buzzr = ~Buzzr;                   
+ 890   2                                           }
+ 891   1              Buzzr =0;
+ 892   1        }
+ 893                  
+ 894          //-----------------------------------------------------------------------------
+ 895          // BUZZER PEEPS LONG  
+ 896          //-----------------------------------------------------------------------------
+ 897          
+ 898            void Longpeep() 
+ 899           {
+ 900   1      
+ 901   1      int b,a;
+ 902   1      
+ 903   1              for(a=0; a<1000 ;a++){                                           //1000
+ 904   2                              for(b=0;b<300;b++);             //200                                   
+ 905   2                                                      Buzzr = ~Buzzr;                   
+ 906   2                                           }
+ 907   1              Buzzr =0;
+ 908   1        }
+ 909          
+ 910                  
+ 911          //-----------------------------------------------------------------------------
+ 912          // Pre Metering 
+ 913          //-----------------------------------------------------------------------------
+ 914          
+ 915          void PreMetering ()
+ 916          {
+ 917   1              
+ 918   1              Feed_Time=0;
+ 919   1              Sub_Volume=0;
+ 920   1              Volume=0;
+ 921   1              
+ 922   1              if(FeedSide) SEG_care (3,1);  //L [] on
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 16  
+
+ 923   1                      else SEG_care (1,1);      //R [] on
+ 924   1              SEG_care (2,1);
+ 925   1              SEG_care (4,1);
+ 926   1      
+ 927   1              Print_LCD();
+ 928   1              OK_Flag=1;                                                                                                       
+ 929   1              if(NumOfBabies==1){                                                                                                                                                                                                                                                                                                                                                     
+ 930   2                                                      if(Sensor_CheckUp()){
+ 931   3                                                                                                      WarmUPSensor ();                                                                                                                                                                                                                                                                                                        
+ 932   3                                                                                                      Menu_Mode=10;
+ 933   3                                                                                              }
+ 934   2                                                              else  Menu_Mode=12;
+ 935   2                                              }
+ 936   1      }
+ 937          
+ 938                  
+ 939          //-----------------------------------------------------------------------------
+ 940          // End of Metering 
+ 941          //-----------------------------------------------------------------------------
+ 942          
+ 943          void EndMetering ()
+ 944          {
+ 945   1              Reset_Prob ();
+ 946   1              MeterOnFlag=0;
+ 947   1              Menu_Mode=0;                                                                                    
+ 948   1              Write_SetionTo_Mem();
+ 949   1              SEG_care (3,0);   // [] off
+ 950   1              SEG_care (1,0);   // [] off
+ 951   1      //      SEG_care (2,1);
+ 952   1      //      SEG_care (4,1);
+ 953   1      //      Print_LCD();
+ 954   1              OK_Flag=0;
+ 955   1              }       
+ 956          //-----------------------------------------------------------------------------
+ 957          // Key Pad 
+ 958          //-----------------------------------------------------------------------------
+ 959          
+ 960          char KeyPad ()
+ 961          
+ 962          {
+ 963   1      char INKey=99;                          // RESET KEY BUFFER TO Z
+ 964   1      
+ 965   1      
+ 966   1              if(Kpad_2)INKey = '1';           // LEFT 
+ 967   1              if(Kpad_3)INKey = '2';          //OK
+ 968   1              if(Kpad_4)INKey = '3';          // SET UP
+ 969   1              if(Kpad_5)INKey = '4';          // DOWN
+ 970   1              if(Kpad_6)INKey = '5';           // UP
+ 971   1              if(Kpad_7)INKey = '6';           // RIGTH 
+ 972   1              if(INKey == PrevKey ) INKey=99 ;
+ 973   1                      else PrevKey=INKey;
+ 974   1              
+ 975   1              if(INKey != 99) PowerSaveCunter=0;
+ 976   1                                                              
+ 977   1              return (INKey);
+ 978   1      }
+ 979          ////////////////////////////////////////////////
+ 980                  
+ 981          void Check_Menu ()      
+ 982          {
+ 983   1      char INKey,a;
+ 984   1              INKey = KeyPad ();
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 17  
+
+ 985   1      
+ 986   1              if(Menu_Mode==33){
+ 987   2                                                      if(INKey != 99){
+ 988   3                                                                                      Comm_Buffer[0] = 'S';
+ 989   3                                                                                      Comm_Buffer[1] = 'w';                                                                           
+ 990   3                                                                                      Comm_Buffer[2] = 'N';
+ 991   3                                                                                      Comm_Buffer[3] = 'r';
+ 992   3                                                                                      Comm_Buffer[4] = INKey;                                                                                 
+ 993   3                                                                                      GO_OUT (5,'T');
+ 994   3                                                                                      peep();
+ 995   3                                                                                      }                                                                                                                                                                                
+ 996   2                                                      
+ 997   2                                                }
+ 998   1              if(Menu_Mode==0){
+ 999   2                                                      SEG_care (16,Cursor);           //:
+1000   2                                                      Cursor =~ Cursor;
+1001   2                                                      Segment=20;
+1002   2                                                      SEG_care (2,1);
+1003   2                                                      SEG_care (4,1);                                                                                                  
+1004   2                                                switch (INKey){                                                                               
+1005   3                                                                               
+1006   3                                                                          // OK
+1007   3                                                                              case '2':
+1008   3                                                                                               peep();
+1009   3                                                                                               if(HistoryMode){
+1010   4                                                                                                                                      HistoryMode=0;  //reset history mode
+1011   4                                                                                                                                      Restart_LCD ();
+1012   4                                                                                                                                      }
+1013   3                                                                                                      else{
+1014   4                                                                                                              if(ChargeMode==0)       PreMetering();
+1015   4                                                                                                                      else{
+1016   5                                                                                                                               Longpeep();
+1017   5                                                                                                                               Longpeep();
+1018   5                                                                                                                               Longpeep();
+1019   5                                                                                                                               Menu_Mode=0;
+1020   5                                                                                                                               }
+1021   4                                                                                                              }                                                                                                                                                                                                                               
+1022   3                                                                              break;
+1023   3      
+1024   3                                                                          // SET
+1025   3                                                                              case '3':
+1026   3      
+1027   3                                                                                              if(MeterOnFlag || HistoryMode)Longpeep();
+1028   3                                                                                                      else{
+1029   4                                                                                                              Menu_Mode=1;
+1030   4                                                                                      //                      SEG_care (21,1);          //setup ON
+1031   4                                                                                                              Segment=9;                      // set day                                                                                                              
+1032   4                                                                                                              peep();
+1033   4                                                                                                              Delay(50);
+1034   4                                                                                                              }                                                                                                                                                       
+1035   3                                                                              break;
+1036   3      
+1037   3                                                                              // LEFT SIDE
+1038   3      
+1039   3                                                                              case '1':                                                                                       
+1040   3                                                                                              if(MeterOnFlag || HistoryMode)Longpeep();
+1041   3                                                                                                      else{
+1042   4      
+1043   4                                                                                                      // bob side = left
+1044   4                                                                                                              SEG_care (3,1);   //L [] ON
+1045   4                                                                                                              SEG_care (1,0);   //R [] OFF                                                            
+1046   4                                                                                                              FeedSide=1;                                                                                                                                                                                                                             
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 18  
+
+1047   4                                                                                                              peep();
+1048   4                                                                                                              }                                                                                                                                                       
+1049   3                                                                              break;
+1050   3      
+1051   3                                                                              case '6':                                                                                       
+1052   3                                                                                              if(MeterOnFlag || HistoryMode)Longpeep();
+1053   3                                                                                                      else{
+1054   4                                                                                                      // bob side = rhite
+1055   4                                                                                                              SEG_care (3,0);   //L [] OFF
+1056   4                                                                                                              SEG_care (1,1);   //R [] ON                                                                             
+1057   4                                                                                                              FeedSide=0;                                                                                                                                                                                                                             
+1058   4                                                                                                              peep();
+1059   4                                                                                                              }                                                                                                                                                       
+1060   3                                                                              break;
+1061   3      
+1062   3                                                                              case '4':
+1063   3                                                                                              if(HistoryMode){
+1064   4                                                                                                                              MemoryReadCunter++;                                                                                                                     
+1065   4                                                                                                                              peep();
+1066   4                                                                                                                              HistoryMode=1;
+1067   4                                                                                                                              DisplayMemory();
+1068   4                                                                                                                              }
+1069   3                                                                                              else Light_Intensity('P');
+1070   3                                                                                                                                                                                                                                                              
+1071   3                                                                              break;
+1072   3      
+1073   3                                                                              case '5':
+1074   3                                                                                              if(HistoryMode){
+1075   4                                                                                                                              MemoryReadCunter--;
+1076   4                                                                                                                              if(MemoryReadCunter <=0){
+1077   5                                                                                                                                                                               MemoryReadCunter=1;
+1078   5                                                                                                                                                                               Longpeep();
+1079   5                                                                                                                                                                              }
+1080   4                                                                                                                              peep();
+1081   4                                                                                                                              HistoryMode=1;
+1082   4                                                                                                                              DisplayMemory();
+1083   4                                                                                                                              }
+1084   3                                                                                              else Light_Intensity('N');
+1085   3                                                                                                                                                                                                                                                      
+1086   3                                                                              break;
+1087   3      
+1088   3      
+1089   3                                                                              case 99:                                                                                                                                                                                                                                
+1090   3                                                                              break;
+1091   3      
+1092   3                                                                              default: Longpeep();
+1093   3                                                                              }
+1094   2                                                      INKey=99;
+1095   2                                                      PrintLowCharSegment();
+1096   2                                                      SetUpperFigers();       
+1097   2                                                                        
+1098   2                                              }
+1099   1      
+1100   1                // setup mode update DATE & TIME
+1101   1      
+1102   1              if(Menu_Mode==1){
+1103   2                                              BlankLCD();
+1104   2                                              if(Segment <10 && Segment > 3) SEG_care (18,Cursor);     // date segment ON
+1105   2                                      
+1106   2                                              if(Segment < 4 && Segment >= 0) SEG_care (15,Cursor);    // time segment ON
+1107   2                                      
+1108   2                                              SEG_care (21,1);          //setup ON
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 19  
+
+1109   2                                              SEG_care (20,1);                //point ON
+1110   2                                              SEG_care (22,1);                //point ON
+1111   2                                              SEG_care (16,1);                //:
+1112   2                                              Cursor =~ Cursor;                                       
+1113   2                                              switch (INKey){                         
+1114   3                                                                              case '1':                                                       
+1115   3                                                                                              Segment--;                               
+1116   3                                                                                              if(Segment<0)Segment=0, Longpeep();
+1117   3                                                                                              peep();                                                                                                                                                                                                         
+1118   3                                                                              break;
+1119   3                                                                                      // OK out of setup mode
+1120   3                                                                              case '2':                                                       
+1121   3                                                                                              Menu_Mode=2;
+1122   3                                                                              //              SEG_care (21,0);          //setup OFF
+1123   3                                                                                              Update_RTC ();
+1124   3                                                                              //              Cursor=0;                                                       
+1125   3                                                                                              peep();                                                                                 
+1126   3                                                                                              Delay(20);                                                                                                                                                      
+1127   3                                                                              break;
+1128   3                                                                               // history mode enterens
+1129   3                                                                              case '3':
+1130   3                                                                                              Menu_Mode=0;                                                                    
+1131   3                                                                                              HistoryMode=5;
+1132   3                                                                                              MemoryReadCunter=1;
+1133   3                                                                                              Longpeep();
+1134   3                                                                                              VolumeOf_24H =0;
+1135   3                                                                                              Cal_Last_24hr ();
+1136   3                                                                      //                      memory_24_flag=1;
+1137   3                                                                      //                      DisplayMemory ();       
+1138   3                                                                                                                      
+1139   3                                                                              break;
+1140   3      
+1141   3                                                                          // DOWNE
+1142   3                                                                              case '4':
+1143   3                                                                                              DateTime[Segment]--;
+1144   3                                                                                              if(Segment==9)if(DateTime[Segment] < 0) DateTime[Segment]=3;  //day limit
+1145   3                                                                                              if(Segment==7)if(DateTime[Segment] < 0) DateTime[Segment]=1;  // mount limit
+1146   3                                                                                              if(Segment==3)if(DateTime[Segment] < 0) DateTime[Segment]=2; // hoers limit
+1147   3                                                                                              if(Segment==1)if(DateTime[Segment] < 0) DateTime[Segment]=5; // minits limit
+1148   3                                                                                              if(DateTime[Segment] < 0) DateTime[Segment]=9;                                                                                                                                                                                                                          
+1149   3                                                                                              peep();                                                                                                                                                                                                                         
+1150   3                                                                              break;
+1151   3      
+1152   3                                                                      //UP
+1153   3                                                                              case '5':
+1154   3                                                                                              DateTime[Segment]++;
+1155   3                                                                                              if(Segment==9)if(DateTime[Segment] > 3) DateTime[Segment]=0;  //day limit
+1156   3                                                                                              if(Segment==7)if(DateTime[Segment] > 1) DateTime[Segment]=0;  // mount limit
+1157   3                                                                                              if(Segment==3)if(DateTime[Segment] > 2) DateTime[Segment]=0; // hoers limit
+1158   3                                                                                              if(Segment==1)if(DateTime[Segment] > 5) DateTime[Segment]=0; // minits limit
+1159   3                                                                                              if(DateTime[Segment] > 9) DateTime[Segment]=0;
+1160   3                                                                                              if(DateTime[Segment] < 0) DateTime[Segment]=1;                                                                                                                                                          
+1161   3                                                                                              peep();                                                                                                                                         
+1162   3                                                                              break;
+1163   3      
+1164   3                                                                        //move right to left volume/flow screen
+1165   3                                                                              case '6':
+1166   3                                                                                              Segment++;                               
+1167   3                                                                                              if(Segment>9)Segment=9, Longpeep();                                                                             
+1168   3                                                                                              peep();                                                                                                                                         
+1169   3                                                                              break;
+1170   3                                                                              }
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 20  
+
+1171   2                                                      INKey=99; 
+1172   2                                                      PrintLowCharSegment();
+1173   2                                              }
+1174   1                      
+1175   1              // seting birth date of babies
+1176   1      
+1177   1        if(Menu_Mode==4){
+1178   2                                              BlankLCD();
+1179   2                              
+1180   2                                              SEG_care (18,Cursor);    // date segment ON
+1181   2                                              SEG_care (19,Cursor);    // birth segment ON                                    
+1182   2                                              SEG_care (21,1);          //setup ON
+1183   2                                              SEG_care (20,1);                //point ON
+1184   2                                              SEG_care (22,1);                //point ON
+1185   2                                              DateTime[3]=99;
+1186   2                                              Cursor =~ Cursor;
+1187   2                                              switch (INKey){
+1188   3                                                                              case 99:                                                                                                                                                                                                                                
+1189   3                                                                              break;
+1190   3                                                                              case '1':                                                       
+1191   3                                                                                              Segment--;                               
+1192   3                                                                                              if(Segment<4)Segment=4, Longpeep();
+1193   3                                                                                              peep();                                                                                                                                                                                                         
+1194   3                                                                              break;
+1195   3      
+1196   3                                                                                      // OK out of setup mode
+1197   3                                                                              case '2':
+1198   3                                                                      //                      Cursor=0;                                                       
+1199   3                                                                                              Menu_Mode=0;                                                                    
+1200   3                                                                                              for(a=4; a<10; a++) BurthDate[a-4]= DateTime[a];                                                                                        
+1201   3                                                                                              Delay(20);                                                                                                                                              
+1202   3                                                                                              peep();                                                                         
+1203   3                                                                                              Start_Display();
+1204   3                                                                                              ChackBattry ();
+1205   3                                                                                              UpdateBasicMem();                                                                                                                                                       
+1206   3                                                                              break;
+1207   3                                                                               //set
+1208   3                                                                              case '3':                                                       
+1209   3                                                                              //              Cursor=0;                                                       
+1210   3                                                                                              Menu_Mode=0;                                                                                                                                                                                                                                    
+1211   3                                                                                              peep();                                                                         
+1212   3                                                                                              Start_Display();                                                                                                                        
+1213   3                                                                              break;
+1214   3      
+1215   3                                                                          // DOWNE
+1216   3                                                                              case '4':
+1217   3                                                                                              DateTime[Segment]--;
+1218   3                                                                                              if(DateTime[Segment] < 0) DateTime[Segment]=9;                                                                                                                                                                                                                          
+1219   3                                                                                              peep();                                                                                                                                                                                                                         
+1220   3                                                                              break;
+1221   3      
+1222   3                                                                      //UP
+1223   3                                                                              case '5':
+1224   3                                                                                              DateTime[Segment]++;                                                    
+1225   3                                                                                              if(DateTime[Segment] > 9) DateTime[Segment]=0;                                                                                                                                                          
+1226   3                                                                                              peep();                                                                                                                                         
+1227   3                                                                              break;
+1228   3      
+1229   3                                                                        //move right to left volume/flow screen
+1230   3                                                                              case '6':
+1231   3                                                                                              Segment++;                               
+1232   3                                                                                              if(Segment>9)Segment=9, Longpeep();                                                                             
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 21  
+
+1233   3                                                                                              peep();                                                                                                                                         
+1234   3                                                                              break;
+1235   3                                                                              }                                               
+1236   2                                              INKey=99;
+1237   2                                              PrintLowCharSegment();
+1238   2                                      }
+1239   1              
+1240   1              // seting number of babeis
+1241   1      
+1242   1        if(Menu_Mode==3){
+1243   2                                              BlankLCD();     
+1244   2                                              SEG_care (17,Cursor);    // babies segment blink                
+1245   2                                              SEG_care (21,1);          //setup ON
+1246   2                                              Segment=99;
+1247   2                                              Cursor =~ Cursor;                       
+1248   2                                              DateTime[3]=NumOfBabies;                
+1249   2                                              switch (INKey){
+1250   3                                                                              case 99:                                                                                                                                                                                                                                
+1251   3                                                                              break;
+1252   3                                                                                      // OK out of setup mode
+1253   3                                                                              case '2':
+1254   3                                                                                              Menu_Mode=4;                                                                            
+1255   3                                                                                              peep();
+1256   3                                                                                              Segment=9;
+1257   3                                                                                              for(a=4; a<10; a++)DateTime[a] = BurthDate[a-4];
+1258   3                                                                                              Delay(20);                                                              
+1259   3                                                                              break;                                                  
+1260   3      
+1261   3                                                                          // DOWNE
+1262   3                                                                              case '4':
+1263   3                                                                                              DateTime[3]=1;
+1264   3                                                                                              NumOfBabies=1;
+1265   3                                                                                              peep();                                                                                                                                                                                                                         
+1266   3                                                                              break;
+1267   3                                                                              // set
+1268   3                                                                              case '3':                                                       
+1269   3                                                                              //              Cursor=0;                                                       
+1270   3                                                                                              Menu_Mode=0;                                                                                                                                                                                                                                    
+1271   3                                                                                              peep();                                                                         
+1272   3                                                                                              Start_Display();                                                                                                                        
+1273   3                                                                              break;
+1274   3      
+1275   3                                                                      //UP
+1276   3                                                                              case '5':
+1277   3                                                                                              DateTime[3]=2;
+1278   3                                                                                              NumOfBabies=2;
+1279   3                                                                                              peep();                                                                                                                                         
+1280   3                                                                              break;
+1281   3      
+1282   3                                                                        //move right to left volume/flow screen
+1283   3                                                                              
+1284   3                                                                              default: Longpeep();                                                                    
+1285   3                                                                              }
+1286   2                                              INKey=99;
+1287   2                                              PrintLowCharSegment();
+1288   2                                      } 
+1289   1      ///////////////////////////////////////////////////////
+1290   1      //////////////////////////////////////////////////////////
+1291   1      ////////////////////////////////////////////////////////////
+1292   1              // seting feeding babeis
+1293   1      
+1294   1        if(Menu_Mode==12){
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 22  
+
+1295   2                                              BlankLCD();     
+1296   2                                              SEG_care (17,Cursor);    // babies segment blink                                        
+1297   2                      //                      Segment=99;
+1298   2                                              Cursor =~ Cursor;
+1299   2                                              for(a=0;a<10;a++)DateTime[a]=99;                        
+1300   2                                              DateTime[3]=Baby;
+1301   2                                              SEG_care (2,1);   //R ON
+1302   2                                              SEG_care (4,1);   //L ON
+1303   2                                              if(FeedSide) SEG_care (3,1);      //L [] blink
+1304   2                                                              else SEG_care (1,1);      //R []  blink         
+1305   2                                              switch (INKey){
+1306   3                                                                              case 99:                                                                                                                                                                                                                                
+1307   3                                                                              break;
+1308   3                                                                                      // OK out of feeding babeis
+1309   3                                                                              case '2':
+1310   3                                                                                              peep();                                                                 
+1311   3                                                                                              Get_Date_Time();
+1312   3                                                                                              SEG_care (17,0);        // babies segment off                                                                                                                                                                                           
+1313   3                                                                                              if(Sensor_CheckUp()) WarmUPSensor ();                                                                                   
+1314   3                                                                              
+1315   3                                                                                              Menu_Mode=10;                                                                                                                                                                                                                                                                                   
+1316   3                                                                                                                                              
+1317   3                                                                              break;                                                  
+1318   3      
+1319   3                                                                          // DOWNE
+1320   3                                                                              case '4':
+1321   3                                                                                              Baby=1;
+1322   3                                                                                              peep();                                                                                                                                                                                                                         
+1323   3                                                                              break;
+1324   3                                                              
+1325   3                                                                      //UP
+1326   3                                                                              case '5':
+1327   3                                                                                              Baby=2;                                                                                 
+1328   3                                                                                              peep();                                                                                                                                         
+1329   3                                                                              break;                                                  
+1330   3                                                                              
+1331   3                                                                              default: Longpeep();                                                                    
+1332   3                                                                              }
+1333   2                                              INKey=99;
+1334   2                                              PrintLowCharSegment();
+1335   2                                              SetUpperFigers();
+1336   2                                      } 
+1337   1      
+1338   1      
+1339   1      
+1340   1      
+1341   1      
+1342   1      
+1343   1       //////////////////////////////////////////////
+1344   1       ///////////////////////////////////////////////
+1345   1       ///////////////////////////////////////////////
+1346   1      
+1347   1              //seting units 
+1348   1                                              
+1349   1              if(Menu_Mode==2){
+1350   2                                              BlankLCD();                     
+1351   2                                              SEG_care (13,Cursor);    // Units blinks
+1352   2                                              SEG_care (21,1);          //setup ON
+1353   2                                              Segment=99;
+1354   2                                              Cursor =~ Cursor;
+1355   2                                              for(a=0;a<10;a++)DateTime[a]=99;
+1356   2                              
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 23  
+
+1357   2                                              if(Units)SEG_care (10,1);        // FLOZ ON     
+1358   2                                                      else SEG_care (12,1);    // ML ON                                       
+1359   2                                              switch (INKey){
+1360   3                                                                              case 99:                                                                                                                                                                                                                                
+1361   3                                                                              break;
+1362   3                                                                                      // OK out of setup mode
+1363   3                                                                              case '2':
+1364   3                                                                                              Menu_Mode=3;                                                                                    
+1365   3                                                                                              peep();
+1366   3                                                                                              Delay(20);                                                              
+1367   3                                                                              break;
+1368   3      
+1369   3                                                                              case '3':                                                       
+1370   3                                                                                              Cursor=0;                                                       
+1371   3                                                                                              Menu_Mode=0;                                                                                                                                                                                                                                    
+1372   3                                                                                              peep();                                                                         
+1373   3                                                                                              Start_Display();                                                                                                                        
+1374   3                                                                              break;
+1375   3      
+1376   3                                                                      
+1377   3      
+1378   3                                                                          // DOWNE
+1379   3                                                                              case '4':
+1380   3                                                                                              Units = 0;
+1381   3                                                                              //              SEG_care (12,1);         // ML ON                                                                                       
+1382   3                                                                              //              SEG_care (10,0);         // FLOZ OFF
+1383   3                                                                                              peep();                                                                                                                                                                                                                         
+1384   3                                                                              break;
+1385   3      
+1386   3                                                                      //UP
+1387   3                                                                              case '5':
+1388   3                                                                                              Units = 0;
+1389   3                                                                              //              SEG_care (10,1);         // FLOZ ON                                                                                     
+1390   3                                                                              //              SEG_care (12,0);         // ML OFF                                                                              
+1391   3                                                                                              peep();                                                                                                                                         
+1392   3                                                                              break;
+1393   3      
+1394   3                                                                        //move right to left volume/flow screen
+1395   3                                                                              
+1396   3                                                                              default: Longpeep();
+1397   3                                                                              }
+1398   2                                                      INKey=99;
+1399   2                                                      PrintLowCharSegment();
+1400   2                                      }
+1401   1      
+1402   1                                      // metering mode
+1403   1              if(Menu_Mode==10){
+1404   2                                                      HistoryMode=0;
+1405   2                                                      Cursor =~ Cursor;
+1406   2                                                      if(FeedSide) SEG_care (3,Cursor);         //L [] blink
+1407   2                                                              else SEG_care (1,Cursor);         //R []  blink
+1408   2                                                      SEG_care (16,Cursor);           //:
+1409   2                                                      SEG_care (2,1);   //R ON
+1410   2                                                      SEG_care (4,1);   //L ON
+1411   2                                                      if(Units)SEG_care (10,1);        // FLOZ ON     
+1412   2                                                              else SEG_care (12,1);    // ML ON                                                                                                       
+1413   2                                                      switch (INKey){
+1414   3                                                                              case 99:                                                                                                                                                                                                                                
+1415   3                                                                              break;
+1416   3                                                                                      // OK out working mode
+1417   3                                                                              case '2':
+1418   3                                                                                              peep();
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 24  
+
+1419   3                                                                                              EndMetering();
+1420   3                                                                                                                                                              
+1421   3                                                                              break;
+1422   3                                                                              case '4':
+1423   3                                                                                              Light_Intensity('P');                                                                                                                                                   
+1424   3                                                                              break;
+1425   3      
+1426   3                                                                              case '5':                                                                                       
+1427   3                                                                                              Light_Intensity('N');                                                                                                                                                   
+1428   3                                                                              break;
+1429   3      
+1430   3      
+1431   3                                                                              default: Longpeep();                                                            
+1432   3                                                                      }
+1433   2                                                }
+1434   1              Print_LCD();                                                                                                                                                    
+1435   1              Delay(20);
+1436   1      }
+1437          
+1438          //============================
+1439          // Lighting_Intensity
+1440          //=============================
+1441          
+1442          void Light_Intensity(char a)
+1443          {
+1444   1              if(a=='P') LightDisplay = (LightDisplay+25);
+1445   1                      else LightDisplay = (LightDisplay-25);
+1446   1              if (LightDisplay>250){
+1447   2                                                              LightDisplay=250;
+1448   2                                                              Longpeep();
+1449   2                                                      }       
+1450   1              if (LightDisplay<10){
+1451   2                                                        LightDisplay=10;
+1452   2                                                        Longpeep();
+1453   2                                                      }
+1454   1              PCA0CPH0  = LightDisplay;                                                                       
+1455   1              peep();
+1456   1                      
+1457   1      }
+1458          
+1459          
+1460          
+1461          
+1462          //============================
+1463          // Get Date & Time
+1464          //=============================
+1465          void Get_Date_Time()
+1466          {
+1467   1      //DateTime[5];                  // m,10m,H,10H,Y,10Y,M,10M,D,10D        
+1468   1      char a, b;
+1469   1      
+1470   1              Update_TimeDate ();        // get time & date from calender
+1471   1              SEG_care (18,1);          //date ON
+1472   1              SEG_care (15,1);          //time ON
+1473   1              SEG_care (20,1);                //point ON
+1474   1              SEG_care (22,1);                //point ON
+1475   1              SEG_care (16,1);                //:
+1476   1              for(b=6; b<16; b++){
+1477   2                                                      a=LCD_Buffer[b]& 0x80;           //pull out extra bit
+1478   2                                                      LCD_Buffer[b]=Num_To_Seg_Lower(DateTime[b-6],99)|a;       // translat numbers to 7 segmanet
+1479   2                                                      }
+1480   1      
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 25  
+
+1481   1      }
+1482          //===================================
+1483          //      Print Low Char Segment
+1484          //
+1485          //====================================
+1486          void PrintLowCharSegment()
+1487          {
+1488   1      
+1489   1      char a, b;
+1490   1      
+1491   1              for(b=6; b<16; b++){
+1492   2                                                      a=LCD_Buffer[b]& 0x80;           //pull out extra bit
+1493   2                                                      LCD_Buffer[b]=Num_To_Seg_Lower(DateTime[b-6],(b-6))|a;    // translat numbers to 7 segmanet
+1494   2                                                      }
+1495   1      
+1496   1      }
+1497          
+1498          
+1499          //====================================
+1500          
+1501          //============================
+1502          // Get Upper Figers
+1503          //=============================
+1504          void SetUpperFigers()
+1505          {
+1506   1      
+1507   1      unsigned int VolumeZmani;
+1508   1      
+1509   1              Tirgom (Feed_Time);
+1510   1              if(BuffZ[2]==0)GenBuff[0]=99;
+1511   1                      else GenBuff[0]= BuffZ[2];
+1512   1      //      GenBuff[0]= BuffZ[2];
+1513   1              GenBuff[1]= BuffZ[3]; 
+1514   1              SEG_care(5,1);                          //decimal point
+1515   1              if(Volume >=1000){
+1516   2                                                      VolumeZmani=Volume/10;
+1517   2                                                      Tirgom (VolumeZmani);
+1518   2                                                      SEG_care(5,0);
+1519   2                                                      }
+1520   1              
+1521   1              else Tirgom (Volume);
+1522   1      
+1523   1              if(BuffZ[1]==0)GenBuff[2]=99;
+1524   1                      else GenBuff[2]= BuffZ[1];
+1525   1      
+1526   1              GenBuff[3]= BuffZ[2];   
+1527   1              GenBuff[4]= BuffZ[3];
+1528   1      
+1529   1              if(HistoryMode==5)SEG_care (23,0);
+1530   1                      else SEG_care (23,1);     //upper time ON
+1531   1              GetUpperFigers();
+1532   1      }
+1533          
+1534          
+1535          //============================
+1536          // Print Upper Figers
+1537          //=============================
+1538                  
+1539          void GetUpperFigers()
+1540          {
+1541   1      char a, b;
+1542   1                      
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 26  
+
+1543   1              for(b=0; b<5; b++){
+1544   2                                                      a=LCD_Buffer[b]& 0x08;           //pull out extra bit
+1545   2                                                      LCD_Buffer[b]=Num_To_Seg(GenBuff[b])|a;   // translat numbers to 7 segmanet
+1546   2                                                      }
+1547   1      }
+1548          //====================================
+1549          //============================
+1550          // Chack USB  & print icon on screen
+1551          // Display battry status
+1552          //=============================
+1553          
+1554          void ChackUSB()
+1555          {
+1556   1              if(USB_ON)      SEG_care(14,1);                 
+1557   1              else SEG_care(14,0);                            
+1558   1      }
+1559          
+1560          
+1561          //======================================
+1562          //  translat integer to ascii
+1563          //======================================
+1564          
+1565          void Tirgom (unsigned int Zmani){
+1566   1      
+1567   1                      BuffZ[3] = (Zmani%10);  // + 0x30;              // x 1
+1568   1                      Zmani=Zmani/10;
+1569   1                      BuffZ[2] = (Zmani%10);  // + 0x30;      // x 10
+1570   1                      Zmani=Zmani/10;
+1571   1                      BuffZ[1] = (Zmani%10);          //+ 0x30;        // x100
+1572   1                      BuffZ[0] = Zmani/10;            //    x 1000
+1573   1                      
+1574   1      
+1575   1      }
+1576          
+1577          
+1578          
+1579          
+1580          
+1581          
+1582          ////------------------------------------------------------
+1583                  // Test input communuction caming from PC or slave                              
+1584          //----------------------------------------------------
+1585          void  CheckInput()
+1586          {
+1587   1      int a,b,x;
+1588   1              switch (Comm_Buffer[0]){
+1589   2                                                                              
+1590   2                                                      //// Replaing TO THE S L E V E                                                                                                                                          
+1591   2      
+1592   2                                                              case 'k':
+1593   2                                                                              ProbOK=0;
+1594   2                                                                              a = (Comm_Buffer[1]+ Comm_Buffer[2]+ Comm_Buffer[3]); 
+1595   2                                                                              b = (Comm_Buffer[6]+ Comm_Buffer[7]+ Comm_Buffer[8]+
+1596   2                                                                                                      Comm_Buffer[9]+ Comm_Buffer[10]);  
+1597   2                                                                              x = (a%10) * (b%10);
+1598   2                                                                              if(x>0){                                                                        
+1599   3                                                                                              a = (Comm_Buffer[4]-0x30)*10;                                           
+1600   3                                                                                              b = (Comm_Buffer[5]-0x30);
+1601   3                                                                                              a = a+b;
+1602   3                                                                                              if(x == a) ProbOK=1;    //, CodOK=1;
+1603   3                                                                                              }
+1604   2                                                                              Sent_Ack();                                                             
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 27  
+
+1605   2                                                                              SlvEndOfTran=1;                                                                                                                                                                                                                                                                                                                 
+1606   2                                                              break;
+1607   2      
+1608   2                              // get theremistors values in ascii code                                
+1609   2                                                              case 'c':
+1610   2                                                                               MainThrBuff = atoi(&Comm_Buffer[1]);
+1611   2                                                                               CompThrBuff = atoi(&Comm_Buffer[5]);                                                                                                                                                                                                            
+1612   2                                                                               Sent_Ack();
+1613   2                                                                               SlvEndOfTran=1;
+1614   2                              //                                               if(OldStyleFlag == 6){
+1615   2                              //                                                                                              OverDiff = (MainThrBuff-CompThrBuff);
+1616   2                              //                                                                                              MeterOn ();
+1617   2                              //                                                                                      }
+1618   2                              //                                               else ACK_Flag=1;                               
+1619   2                                                                                                                                                                        
+1620   2                                                              break;
+1621   2      
+1622   2                              // get theremistors values in ascii code        + overage different bitween them
+1623   2                                                              case 'd':
+1624   2                                                                               MainThrBuff = atoi(&Comm_Buffer[1]);
+1625   2                                                                               CompThrBuff = atoi(&Comm_Buffer[5]);
+1626   2                                                                               OverDiff = MainThrBuff-CompThrBuff;                                                                                                                                                                                                                                                                             
+1627   2                              //                                               MeterOn ();                                                                                              
+1628   2                                                              break;
+1629   2      
+1630   2      //////////////////////////////////////////////////////////////////////////////////////////
+1631   2      // get in the overage of 30 readings of (MAIN - COMP) 
+1632   2      //////////////////////////////////////////////////////////////////////////////////////////                                                      
+1633   2                                                              case 's':
+1634   2                                                                               OverDiff = atoi(&Comm_Buffer[1]);
+1635   2                                                                               if(MeterOnFlag)Metering_ON ();
+1636   2                                                                               SensorWatchDog=0;       
+1637   2                                                                               
+1638   2                                                              break;
+1639   2                                                              
+1640   2                      // gets from SLAVE ACK signal                                   
+1641   2                                                              case 'q':
+1642   2                                                                               ACK_Flag=1;
+1643   2                                                                               SlvEndOfTran=1;                                                                                                                                 
+1644   2                                                                                                                                                                
+1645   2                                                              break;
+1646   2      
+1647   2                              //get from slave software revtion number                                
+1648   2                                                              case 'v':                                               
+1649   2                                                                               SlaveRev[0] = Comm_Buffer[1];
+1650   2                                                                               SlaveRev[1] = Comm_Buffer[2];
+1651   2                                                                               SlaveRev[2] = Comm_Buffer[4];
+1652   2                                                                               Sent_Ack();
+1653   2                                                                              if(SlaveRev[0]=='S'&&SlaveRev[1]=='1'&&SlaveRev[2]=='5')SoftRevOK=1;
+1654   2                                                                                      else SoftRevOK=0;
+1655   2                                                                              SlvEndOfTran=1;
+1656   2                                                                                                                                                                
+1657   2                                                              break;                                                  
+1658   2                              ////////////////////////////////////////////////////////                        
+1659   2                              ////////////////////// A N S W R I N G    P C
+1660   2                              ////////////////////////////////////////////////////////////
+1661   2                                                              case 'R':
+1662   2                                                              
+1663   2                                              //                               Monitor_Reset ();
+1664   2                                              //                               OldStyleFlag = 0;
+1665   2                                              //                               PCmode=0;
+1666   2                                                                               RSTSRC=0x10;                   
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 28  
+
+1667   2                                              //                               SBUF0 = 'R';
+1668   2                                              //                               BuffLength=1;                                                                            
+1669   2                                                              break;  
+1670   2      
+1671   2      
+1672   2                                 //  Transmiting Master program vertion 
+1673   2      
+1674   2                                  case 'V':
+1675   2                                                                              Comm_Buffer[0]='V';
+1676   2                                                                              Comm_Buffer[1]=REV1;
+1677   2                                                                              Comm_Buffer[2]=REV2;
+1678   2                                                                              Comm_Buffer[3]='.';
+1679   2                                                                              Comm_Buffer[4]=REV3;                                                                    
+1680   2                                                                              GO_OUT (5, 'T');
+1681   2                                                                                                                                                                              
+1682   2                                                              break;
+1683   2                                                              case 'Z':
+1684   2                                                                              Delay(20);
+1685   2                                                                              SBUF0 = 'Z';
+1686   2                                                                              BuffLength=1;
+1687   2                                                                                                                                                                              
+1688   2                                                              break;
+1689   2                                      ///printing on PC the revetion number of prob software
+1690   2      
+1691   2                                                              case 'W':
+1692   2                                                                              Comm_Buffer[0]='W';
+1693   2                                                                              Comm_Buffer[1]=SlaveRev[0];
+1694   2                                                                              Comm_Buffer[2]=SlaveRev[1];
+1695   2                                                                              Comm_Buffer[3]='.';
+1696   2                                                                              Comm_Buffer[4]=SlaveRev[2];                                                     
+1697   2                                                                              GO_OUT (5,'T');
+1698   2                                                                                                                                                                      
+1699   2                                                              break;                                          
+1700   2                                                              
+1701   2                                      // entering the defult power for heater                 
+1702   2                                                              case 'P':
+1703   2                                                                               HtrPwr = atoi(&Comm_Buffer[1]);
+1704   2                                                                               if(HtrPwr > 254)HtrPwr=254;
+1705   2                                                                               if(HtrPwr < 2)HtrPwr=1;
+1706   2                                                                               Delay (50);    //update                                                                                                                                        
+1707   2                                                                               SBUF0 = 'P';
+1708   2                                                                               BuffLength=1;                                                                                  
+1709   2                                                              break;
+1710   2      
+1711   2                                      // format memory entering the beginig (1) of the addres memory 
+1712   2                                      // write defpult parameters
+1713   2                                                              case 'F':
+1714   2                                                                               BurthDate [0] =7;
+1715   2                                                                               BurthDate [1] =5;
+1716   2                                                                               BurthDate [2] =1;
+1717   2                                                                               BurthDate [3] =1;
+1718   2                                                                               BurthDate [4] =1;
+1719   2                                                                               BurthDate [5] =2;
+1720   2                                                                               Units=0;
+1721   2                                                                               NumOfBabies = 1;
+1722   2      
+1723   2                                                                               MemAddControl(2);
+1724   2                                                                               Delay (4);                                                                      
+1725   2                                                                               UpdateBasicMem ();     //writing defalt basic prameters
+1726   2                                                                               BuffLength=1;
+1727   2                                                                               SBUF0 = 'F';
+1728   2                                                                               
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 29  
+
+1729   2                                                                                                                                                                                                                              
+1730   2                                                              break;
+1731   2                                              //writing to memory burth date
+1732   2      
+1733   2                                                              case 'H':
+1734   2                                                                               for(a=0;a<6;a++) BurthDate[a]=(Comm_Buffer[6-a]-0x30);                                                                                                                          
+1735   2                                                                               UpdateBasicMem ();     //writing defalt basic prameters
+1736   2                                                                               BuffLength=1;
+1737   2                                                                               SBUF0 = 'H';                                                                                                                                                                                                   
+1738   2                                                              break;
+1739   2      
+1740   2      
+1741   2                                      /// read the memory
+1742   2      
+1743   2                                                              case 'M':
+1744   2                                                                               ReadMemory();
+1745   2                                                                                                                                                                                                              
+1746   2                                                              break;
+1747   2      
+1748   2                                 /// Update Basic Units Prameters to memory
+1749   2      
+1750   2                                                              case 'U':
+1751   2                                                                               if(Comm_Buffer[1]=='m' & Comm_Buffer[2]=='l') Units=0;
+1752   2                                                                               if(Comm_Buffer[1]=='o' & Comm_Buffer[2]=='z') Units=0;
+1753   2                                                                               UpdateBasicMem();
+1754   2                                                                               SBUF0 = 'U';
+1755   2                                                                               BuffLength=1;                                                                                                                                                                                                  
+1756   2                                                              break;
+1757   2      
+1758   2      
+1759   2                                 /// Update number of babies
+1760   2                                                              case 'B':
+1761   2                                                                               if(Comm_Buffer[1]=='1') NumOfBabies=1;
+1762   2                                                                               if(Comm_Buffer[1]=='2') NumOfBabies=2;
+1763   2                                                                               UpdateBasicMem();
+1764   2                                                                               SBUF0 = 'B';
+1765   2                                                                               BuffLength=1;                                                                                                                                                                                                  
+1766   2                                                              break;
+1767   2      
+1768   2                                 
+1769   2                                                                      // enter date 
+1770   2      
+1771   2                                                              case 'D':
+1772   2                                                                              for(a=0;a<10;a++)       DateTime[a]=(Comm_Buffer[10-a]-0x30);
+1773   2                                                                              Update_RTC ();
+1774   2                                                                              SBUF0 = 'D';                                                                                                                    
+1775   2                                                              break;
+1776   2      
+1777   2                                                         //// Update Sireal Number
+1778   2                                                              case 'S':
+1779   2                                                                                      UpdateSirealNum();
+1780   2                                                                                      SBUF0 = 'S';
+1781   2                                                                                      BuffLength=1;                                                                                                                                                                                           
+1782   2                                                              break;
+1783   2      
+1784   2      
+1785   2                                                         //// Get Sireal Number
+1786   2                                                              case 'G':
+1787   2                                                                                      GetSirealNum();                                                         
+1788   2                                                                                      GO_OUT (12,'G');
+1789   2                                                                                                                                                                                                                                      
+1790   2                                                              break;
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 30  
+
+1791   2      
+1792   2      
+1793   2                                                ///// TEST MODE
+1794   2                                                              case 'T':
+1795   2                                                                                      Menu_Mode=33;
+1796   2                                                                                      SBUF0 = 'T';
+1797   2                                                                                      BuffLength=1;
+1798   2                                                                                                                                                                                                                                      
+1799   2                                                              break;
+1800   2      
+1801   2                                              //// TEST LCD
+1802   2                                                         case 'L':
+1803   2                                                                                      Restart_LCD();
+1804   2                                                                                      SBUF0 = 'L';
+1805   2                                                                                      BuffLength=1;                                                                                                                                                                                                                           
+1806   2                                                              break;
+1807   2      
+1808   2                                                              case 'J':
+1809   2                                                                                      ChackBattry ();
+1810   2                                                                                      Tirgom (BattryLevel);
+1811   2                                                                                      Comm_Buffer[0]=BuffZ[0]+0x30;
+1812   2                                                                                      Comm_Buffer[1]=BuffZ[1]+0x30;
+1813   2                                                                                      Comm_Buffer[2]=BuffZ[2]+0x30;
+1814   2                                                                                      Comm_Buffer[3]=BuffZ[3]+0x30;                                                   
+1815   2                                                                                      GO_OUT (4,'G');                                                                                                                                                                                                                                 
+1816   2                                                              break;                  
+1817   2      
+1818   2      
+1819   2                                      }
+1820   1                                      
+1821   1      }
+1822          
+1823          //////////////////////////////////////////////////////////////////////////////////////
+1824                   // Sensor_CheckUp SLAVE
+1825                   
+1826          ////////////////////////////////////////////////////////////////////////////////////////////////
+1827          
+1828          char Sensor_CheckUp ()
+1829          { 
+1830   1      char a;
+1831   1              // reseting prob
+1832   1              
+1833   1              SlvEndOfTran=0;
+1834   1              for (a=0; a<5; a++){
+1835   2                                                      Reset_Prob ();                                            
+1836   2                                                      if (SlvEndOfTran) break;                                                                                                
+1837   2                                                      }
+1838   1              if (a > 3){
+1839   2                                      Error (1);               // SENSOR NOT RESPANDING
+1840   2                      //              return(0);
+1841   2                                      }
+1842   1              
+1843   1      // Poll out coding of the PROB
+1844   1      
+1845   1              SlvEndOfTran=0;
+1846   1              for (a=0; a<5; a++){
+1847   2                                                      ChackValidProb ();        // chacking the coding of the prob                                                                                                            
+1848   2                                                      if (SlvEndOfTran) break;                                                                                                
+1849   2                                                      }       
+1850   1              if (!ProbOK){
+1851   2                              //       Error (2);              // Prob coding not mucth
+1852   2                              //       return(1);              // FOR TESTING ONLY
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 31  
+
+1853   2                                      }                
+1854   1      
+1855   1      
+1856   1       // check prob software verstion
+1857   1      
+1858   1              SlvEndOfTran=0;
+1859   1              for (a=0; a<5; a++){
+1860   2                                                      ChackSoftProb ();                                                                                                                       
+1861   2                                                      if (SlvEndOfTran) break;                                                                                                                        
+1862   2                                                      }                                                                                               
+1863   1              if (!SoftRevOK){
+1864   2                                      //       Error (3);      // prob software is not mucth
+1865   2                              //               return(0);      // FOR TESTING ONLY
+1866   2                                              }
+1867   1      // pullup termistors values
+1868   1              Delay(200);             //WAIT UNTIL THERMISTORS READY
+1869   1      
+1870   1              SlvEndOfTran=0;
+1871   1              for (a=0; a<5; a++){
+1872   2                                                      Get_Thr ();                                                                                     
+1873   2                                                      if (SlvEndOfTran) break;                                                
+1874   2                                                      }                                                                                               
+1875   1              if (a > 4){
+1876   2                                      Error (1);        // Sensor not respanding
+1877   2                              //      return(0);
+1878   2                                      }
+1879   1                      // checking theremistors                                
+1880   1      
+1881   1              if(MainThrBuff > 990 || CompThrBuff > 990){
+1882   2                                                                                      //              Error (4);              // Thermistors values too HIGH
+1883   2                                                                                      //              return(0);
+1884   2                                                                                                }
+1885   1              if(MainThrBuff < 99 || CompThrBuff < 99){
+1886   2                                                                                      //      Error (5);                      // Thermistors values too LOW
+1887   2                                                                                      //      return(0);
+1888   2                                                                                              }        
+1889   1              if((MainThrBuff-CompThrBuff)> 100){
+1890   2                                                                      //              Error (6);                      // Thermistors diffrenc value too LOW
+1891   2                                                                      //              return(0);
+1892   2                                                                                } 
+1893   1              return (1);
+1894   1              
+1895   1                                                      
+1896   1      }
+1897          //-----------------------------------------------
+1898          // ERORR hendling
+1899          //-----------------------------------------------
+1900          
+1901          void Error (char S)
+1902          {
+1903   1              MeterOnFlag=0;
+1904   1              BlankLCD ();  // clean LCD buffer 
+1905   1              GenBuff[0]= 99; //blank
+1906   1              GenBuff[1]= 99; //blank
+1907   1              GenBuff[2]= 11; // 'E'
+1908   1              GenBuff[3]= 12; // 'r'
+1909   1              GenBuff[4]= S;  // Erorr number         
+1910   1              GetUpperFigers ();                                                                                      
+1911   1              Print_LCD ();
+1912   1              Longpeep();
+1913   1              Delay(10);
+1914   1          Longpeep();
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 32  
+
+1915   1          Delay(10);
+1916   1          Longpeep();
+1917   1          Delay(200);
+1918   1      //      Restart_LCD();
+1919   1      //      Reset_Prob ();
+1920   1              RSTSRC=0x10;
+1921   1      
+1922   1      }
+1923          
+1924          
+1925          
+1926          //------------------------------------------
+1927          // GO OUT TO TREMINAL T and for slave S
+1928          //--------------------------------------------
+1929          
+1930          void GO_OUT(char length, char DIS)
+1931          {
+1932   1              Comm_Buffer[length]= '%';       
+1933   1              BuffLength = length+1;
+1934   1              Pos =0 ;
+1935   1              OutFlag = 1;
+1936   1              if(DIS=='S')SBUF0 = '#';
+1937   1              if(DIS=='G')SBUF0 = 'G';
+1938   1              else SBUF0 = '$';       
+1939   1      
+1940   1      }
+1941          
+1942          
+1943          
+1944          //--------------------------------------
+1945          //CHACK serial number  and other numbers
+1946          //--------------------------------------------
+1947          
+1948          void ChackValidProb ()
+1949          {
+1950   1      
+1951   1              Comm_Buffer[0]= 'k';
+1952   1              GO_OUT (1,'S');
+1953   1              Delay(10);                              //wait  update                                  
+1954   1              CheckInput();
+1955   1      }
+1956          
+1957          //------------------------------------------
+1958          // SEND ACK
+1959          //--------------------------------------------
+1960          
+1961          void Sent_Ack(void)
+1962          {
+1963   1              Comm_Buffer[0]= AckChar;        
+1964   1              GO_OUT(1, 'S');                  // S sent ACK to SLAVE
+1965   1              Delay (2);
+1966   1      
+1967   1      }
+1968          
+1969          
+1970          //--------------------------------------
+1971          //CHACK PROB SOFTWARE VERSION 
+1972          //--------------------------------------------
+1973          
+1974          void ChackSoftProb ()
+1975          {
+1976   1      
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 33  
+
+1977   1              Comm_Buffer[0]= 'v';    
+1978   1              GO_OUT (1,'S');
+1979   1              Delay(4);                               //wait  update                          
+1980   1              CheckInput();
+1981   1      }                                                                                                               
+1982          
+1983          
+1984          //--------------------------------------
+1985          //Reset Prob
+1986          //--------------------------------------------
+1987          
+1988          void Reset_Prob ()
+1989          {
+1990   1      
+1991   1              Comm_Buffer[0]= 'r';    
+1992   1              GO_OUT(1, 'S');
+1993   1              Delay(2);                               //wait  mS update                                                                               
+1994   1              CheckInput();
+1995   1      }
+1996          
+1997          
+1998          //--------------------------------------
+1999          //Get thremistor from slave
+2000          //--------------------------------------------
+2001          
+2002          void Get_Thr ()
+2003          {
+2004   1      
+2005   1              Comm_Buffer[0]= 'c';    
+2006   1              GO_OUT (1,'S');
+2007   1              Delay(5);                               //wait  mS      update                                  
+2008   1              CheckInput();
+2009   1      }                                                                                                               
+2010          
+2011          
+2012          //--------------------------------------
+2013          //Get thremistor difference
+2014          //--------------------------------------------
+2015          
+2016          void Get_Difference ()
+2017          {
+2018   1              Comm_Buffer[0] = 's';
+2019   1              GO_OUT (1,'S');
+2020   1              Delay(10);                                              
+2021   1              CheckInput();
+2022   1      }                                                                                                               
+2023          
+2024          
+2025          
+2026          //---------------------------------------------------
+2027          // Set Heater
+2028          //--------------------------------------------------
+2029          void SetHeater (char HTR)
+2030          {
+2031   1              Tirgom(HTR);
+2032   1              Comm_Buffer[0]= 'p';
+2033   1              Comm_Buffer[1]= BuffZ[1]+0x30;  
+2034   1              Comm_Buffer[2]= BuffZ[2]+0x30; 
+2035   1              Comm_Buffer[3]= BuffZ[3]+0x30;          
+2036   1              GO_OUT (4,'S');
+2037   1              Delay(5);
+2038   1      }
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 34  
+
+2039          
+2040          //---------------------------------------------------
+2041          // Turn off Monitor
+2042          //--------------------------------------------------
+2043          
+2044          
+2045          void    Turn_off_Monitor ()
+2046          {
+2047   1              peep();
+2048   1              ChackBattry();
+2049   1      
+2050   1              // For switch test 
+2051   1              if(Menu_Mode==33){
+2052   2                                                      Comm_Buffer[0] = 'S';
+2053   2                                                      Comm_Buffer[1] = 'w';                                                                           
+2054   2                                                      Comm_Buffer[2] = 'N';
+2055   2                                                      Comm_Buffer[3] = 'r';
+2056   2                                                      Comm_Buffer[4] = '7';                                           
+2057   2                                                      GO_OUT (5,'T');
+2058   2                                                      }
+2059   1              else{
+2060   2                              if (ChargeMode==0){
+2061   3                                                                 if(OK_Flag) EndMetering();
+2062   3                                                                 else PreMetering();
+2063   3                                                                 Delay(150);
+2064   3                                                                 }
+2065   2                              if(ChargeMode==2)Error (9);
+2066   2      //                      Delay(150);             
+2067   2                              if(SWICTH ){      // if SWITCH STILL PREESED TURN OFF THE MONITOR
+2068   3                                                      Longpeep();                             
+2069   3                                                      Delay(80);                                                                                                      
+2070   3                                                      if(ChargeMode==0) SW_OFF = 0;
+2071   3                                                      }                                                                
+2072   2                                
+2073   2                         }
+2074   1      }
+2075          //==================
+2076          // Warming UP 
+2077          //==================
+2078          
+2079          void WarmUPSensor ()
+2080          {
+2081   1      
+2082   1      char a;
+2083   1      
+2084   1              SensorWatchDog=0;
+2085   1              Get_Thr ();             
+2086   1              Scalibration = (MainThrBuff-CompThrBuff);
+2087   1                      
+2088   1              SetHeater (HtrPwr);
+2089   1              for(a=0; a<20; a++){
+2090   2                                                       Delay (50);    
+2091   2                                                       Get_Thr ();                                             
+2092   2                                                       if ((MainThrBuff-CompThrBuff)> 50)break;               
+2093   2                                                      }                                                                                                                                                                                                               
+2094   1              if(a>18) Error (7);              //Probe not heating up
+2095   1                                                      
+2096   1                      else{
+2097   2                               StabeTime=5;
+2098   2                               StabeFlag = 0;
+2099   2                               MeterOnFlag=1;
+2100   2                               Get_Difference ();
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 35  
+
+2101   2                               StartTimeStatus=DateTime[0];
+2102   2                               }
+2103   1      }
+2104          
+2105          
+2106          
+2107          //=======================
+2108          // M E T E R I N G 
+2109          //=======================
+2110          
+2111          void Metering_ON ()
+2112          {
+2113   1      unsigned int  Flow;
+2114   1      int Scalc, ThermBuffDiff;
+2115   1      
+2116   1              // delay time for stabilezing the sensors
+2117   1              if(!StabeFlag){
+2118   2                                              StabeTime--;
+2119   2                                              if(StabeTime<1) StabeFlag=1;
+2120   2                                              }
+2121   1                      else{           
+2122   2                               Scalc=OverDiff-Scalibration;   
+2123   2      
+2124   2              // F I F O ///
+2125   2      /////////////////////////////////////////       
+2126   2      //                      ThrmDiffBuff[4]=ThrmDiffBuff[3];
+2127   2      //                      ThrmDiffBuff[3]=ThrmDiffBuff[2];
+2128   2                              ThrmDiffBuff[2]=ThrmDiffBuff[1];
+2129   2                              ThrmDiffBuff[1]=ThrmDiffBuff[0];
+2130   2                              ThrmDiffBuff[0] = Scalc;
+2131   2      //---------------------------------------------------------
+2132   2      
+2133   2                                      
+2134   2                              ThermBuffDiff = (ThrmDiffBuff[2]-ThrmDiffBuff[0]); 
+2135   2                              if ((ThermBuffDiff< (-2)) && FlowFlag==1 )FlowFlag=0;
+2136   2                              if ((ThermBuffDiff > 2) && FlowFlag==0 && Scalc < 130)FlowFlag=1;
+2137   2      
+2138   2                              if(FlowFlag){
+2139   3                                                                                                              
+2140   3                                                      Scalc = Scalc*10;                                                                                               
+2141   3                                                      if (Scalc > 1300)Flow=0;
+2142   3                                                      if (Scalc <= 1300 && Scalc > 1180)Flow = (1300 - Scalc)/12;              //0-1
+2143   3                                                      if (Scalc <= 1180 && Scalc > 1110)Flow = 10+((1180 - Scalc)/7);  //1-2
+2144   3                                                      if (Scalc <= 1110 && Scalc > 1080)Flow = 20+((1110 - Scalc)/3);  //2-3
+2145   3                                                      if (Scalc <= 1080 && Scalc > 1060)Flow = 30+((1080 - Scalc)/2);  //3-4
+2146   3                                                      if (Scalc <= 1060 && Scalc > 1040)Flow = 40+((1060 - Scalc)/2);  //4-5
+2147   3                                                      if (Scalc <= 1040 && Scalc > 1020)Flow = 50+((1040 - Scalc)/2);  //5-6
+2148   3                                                      if (Scalc <= 1020 && Scalc > 1000)Flow = 60+((1020 - Scalc)/2);  //6-7
+2149   3                                                      if (Scalc <= 1000 && Scalc > 980)Flow = 70+((1000 - Scalc)/2);   //7-8
+2150   3                                                      if (Scalc <= 980 && Scalc > 960)Flow = 80+((980 - Scalc)/2);     //8-9
+2151   3                                                      if (Scalc <= 960 && Scalc > 940)Flow = 90+((960 - Scalc)/2);     //9-10
+2152   3                                                      if (Scalc <= 940)Flow = 100;
+2153   3      
+2154   3                                                      Sub_Volume = Sub_Volume+(Flow*96)/10;
+2155   3                                                      Volume = Sub_Volume/1000;
+2156   3                                                      SetUpperFigers ();
+2157   3                              //                      if(Volume > 999){
+2158   3                              //                                                              Volume=Volume/10;
+2159   3                              //                                                              More_then_100_flag=1;
+2160   3                              //                                                       }
+2161   3                                              SBUF0='F';              //for testing only
+2162   3                                                }
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 36  
+
+2163   2      
+2164   2                                                                                                                 
+2165   2      
+2166   2                              }
+2167   1                              
+2168   1      }
+2169          
+2170          //////////////////////////////////////////////////////////////////////////////////////
+2171          //////////////////////////////////////////////////////////////////////////////////////
+2172          /////////////////////////////////////////////////////////////
+2173          ////    open external memory
+2174          ///////////////////////////////////////////////////////////////
+2175          
+2176          void Open_Memory (void)
+2177          {
+2178   1              Mem_CS =0;              // open memory 
+2179   1      }
+2180          
+2181          //////////////////////////////////////////////////////////////////
+2182          ////////        clsoe external memory
+2183          ///////////////////////////////////////////////////////////////
+2184          
+2185          void Close_Memory (void)
+2186          {
+2187   1              Mem_CS =1;              // open memory
+2188   1              Delay (2);
+2189   1               
+2190   1      }
+2191          
+2192          ////////////////////////////////////////////////////////////////
+2193          /// PRINT TO TERMINAL
+2194          //////////////////////////////////////////////////////////////
+2195          
+2196          void SentToTherminal    (void)
+2197          {
+2198   1              if(!OutFlag){
+2199   2                                              BuffLength=8;
+2200   2                                              Pos =1 ;
+2201   2                                              OutFlag = 1;    
+2202   2                                              SBUF0 = Comm_Buffer[0]; 
+2203   2                                              while (OutFlag);   //Wait until END of transmitin 
+2204   2                                      }
+2205   1      }
+2206          
+2207          ////////////////////////// RTC controll//////////
+2208          ////////////////////////////////////////////
+2209          
+2210          void    RTC_chanal (char M)
+2211          {
+2212   1              WACT_CS = M;
+2213   1      }
+2214          
+2215          //void  Close_RTC (void)
+2216          //{
+2217          //      WACT_CS = 0;
+2218          //}
+2219          ///////////////////////////////////////////////////////////////////////////////
+2220          /////////////  L C D //////////////////////
+2221          ////////////////////////////////////////////
+2222          
+2223          void    LCD_CS_Mode (char m)
+2224          {
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 37  
+
+2225   1              LCD_CS = m;
+2226   1      }
+2227          /////////////////////////////////////////////
+2228          
+2229          void    LCD_DATA_Mode (char m)
+2230          {
+2231   1              LCD_DATA = m;
+2232   1      }
+2233          /////////////////////////////////////////////////
+2234          
+2235          
+2236          void    LCD_CLK_Mode (char m)
+2237          {
+2238   1              LCD_CLK = m;
+2239   1      }
+2240          
+2241          
+2242          
+2243          //---------------------------------------
+2244          // Wrating  to SPI
+2245          //---------------------------------------
+2246          char Fetch_SPI (char a)
+2247          {
+2248   1      char b;
+2249   1              SPI0DAT = a;
+2250   1      //      Delay (2);
+2251   1              for (b=0;b<100;b++);
+2252   1      //      a = SPI0DAT;
+2253   1              return (SPI0DAT);       //return SPI buffer        
+2254   1      }
+2255          
+2256                                                                                                                  
+2257          ////////////////////////////////////////////////////////////////////////////////////////////////
+2258          ///////////////////////////////////////////////////////////////////////////////////////                                                                                                 
+2259          ////////////////////////////////////////////////////////////////////////////////////////////////
+2260          
+2261          
+2262          //-----------------------------------------------------------------------------
+2263          // Interrupt Service Routines
+2264          //-----------------------------------------------------------------------------
+2265          
+2266          //-----------------------------------------------------------------------------
+2267          // UART0_Interrupt
+2268          //-----------------------------------------------------------------------------
+2269          //
+2270          // This routine is invoked whenever a character is entered or displayed on the
+2271          // Hyperterminal.
+2272          //
+2273          //-----------------------------------------------------------------------------
+2274           
+2275                  // servic the UART communction
+2276          
+2277          void UartIsr(void) interrupt 4 using 2{         
+2278   1      
+2279   1              // RECEVING
+2280   1      
+2281   1                      if (RI0)        { 
+2282   2                                       RI0 = 0;               //Reset interapt flag
+2283   2                                                                                                                                      
+2284   2                                       if (InFlag == 1) Comm_Buffer[Pos++] = SBUF0;   //put the next char in the input buffer
+2285   2                                                                      
+2286   2                                       if (SBUF0 == '$'){
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 38  
+
+2287   3                                                                                      InFlag = 1;             // begining of input string
+2288   3                                                                                      Pos=0;                  //reset input buffer pointer
+2289   3                                                                                      OutFlag=0;                                                                                                      
+2290   3                                                                                      }
+2291   2                                       if (SBUF0 == '!'){                                                                      
+2292   3                                                                               Comm_Buffer[0]= 'R';
+2293   3                                                                               InFlag = 5;                                                             
+2294   3                                                                        }
+2295   2      
+2296   2                                       if (SBUF0 == '%') InFlag = 5;                  // go to check the input
+2297   2                                                                                
+2298   2                                      }
+2299   1                                      
+2300   1                      // TRANSMITING                                                                  
+2301   1                      if(TI0){ 
+2302   2                                       
+2303   2                                      TI0 = 0;                                                                                                //reset of interapt flag
+2304   2                              if (Pos < BuffLength){
+2305   3                                                      //                              if(MemFlag)SBUF0 = LCD_Buf[Pos++];
+2306   3                                                                                      SBUF0 = Comm_Buffer[Pos++];     // next cahracter
+2307   3                                                                                      }
+2308   2                      
+2309   2                                      else OutFlag=0, Comm_Buffer[0]=' ';                             
+2310   2                                      }                                       
+2311   1      }
+2312          
+2313          
+2314          
+2315          // TIMER 2 SERVING THE CLOCK AND ANALOG TO DIGITAL CONVERTER
+2316          
+2317          void Timer2(void) interrupt 5
+2318          {
+2319   1      
+2320   1      
+2321   1      //---------------------------
+2322   1      // TIMER FOR 40Hz
+2323   1      //---------------------------
+2324   1              TF2H = 0;               // Reset Interrupt
+2325   1      //      TEST =~TEST;
+2326   1              if(--DelayT < 0)DelayT=0;               // sub delay counter  
+2327   1      //      if(Clock++ > 79) Clock=0, SecClock++;
+2328   1              Clock++;
+2329   1              ClockQ++;
+2330   1      //      PCA0CPH4 = 0x00;
+2331   1      //      Cursor = ~Cursor;
+2332   1              
+2333   1      
+2334   1      }
+2335          
+2336          
+2337          
+2338           // timer 0 routin
+2339          //void Timer0(void) interrupt 1
+2340          //{
+2341                  
+2342          //      TF0 = 0 ;       
+2343          //      TEST =~TEST;
+2344          
+2345          //}
+2346          
+2347          
+2348          // service for ADC
+C51 COMPILER V9.03   BFM_REV_32_0                                                          10/06/2013 09:25:19 PAGE 39  
+
+2349          
+2350          void A_TO_D (void) interrupt 10{
+2351   1      
+2352   1              BattryLevel = ADC0;
+2353   1              AD0INT = 0;                                                                     // reset the ADC flag           
+2354   1      }
+2355          
+2356          
+2357                                          
+*** WARNING C291 IN LINE 100 OF BFM_REV_32_0.C: not every exit path returns a value
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   8803    ----
+   CONSTANT SIZE    =     51    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =    117     145
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

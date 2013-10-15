@@ -1,0 +1,552 @@
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 1   
+
+
+C51 COMPILER V9.03, COMPILATION OF MODULE MEMORY_MANGMENT_32_0
+OBJECT MODULE PLACED IN Memory_mangment_32_0.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Memory_mangment_32_0.c COMPACT ROM(COMPACT) BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          
+   2          
+   3          
+   4                           
+   5                                           //////////////////////////////////////////////////////
+   6                                           /////// M E M O R Y ////////////////////////////////
+   7                                           ////////////////////////////////////////////////////
+   8          
+   9          
+  10          
+  11          //-----------------------------------------------------------------------------
+  12          // Function PROTOTYPES
+  13          //-----------------------------------------------------------------------------
+  14          
+  15          
+  16          void    MemAddControl           (char);
+  17          void    ReadMemoryBasic         (void);
+  18          void    SentMemToTerminal       (void);
+  19          char    Memory_Redy                     (void);
+  20          void    ReadMemory                      (void);
+  21          void    UpdateBasicMem          (void);
+  22          void    Write_SetionTo_Mem      (void);
+  23          void    DisplayMemory           (void);
+  24          char    GetNextAdd                      (void);
+  25          void    History                         (void);
+  26          void    Open_Memory             (void);
+  27          void    Close_Memory            (void);
+  28          
+  29          char    Fetch_SPI                       (char);
+  30          void    Error                           (char);
+  31          void    Delay                           (unsigned char);
+  32          void    Tirgom                          (unsigned int);
+  33          void    BlankLCD                        (void);
+  34          void    SEG_care                        (char,char);
+  35          void    ChackBattry             (void);
+  36          void    SetUpperFigers          (void);
+  37          void    PrintLowCharSegment     (void);
+  38          void    Print_LCD                       (void);
+  39          void    Enable_Write_To_Memory (void);
+  40          void    SentToTherminal         (void);
+  41          void    PrepareWritingMemory (void);
+  42          void    Cal_Last_24hr           (void);
+  43          void    Get_Date_Time           (void);
+  44          void    Longpeep                        (void);
+  45          void    Display_Last_24hr       (void);
+  46          void    Fising_Memory           (void);
+  47          int             Cal_Memory_Add          (void);
+  48          void    UpdateSirealNum         (void);
+  49          
+  50          
+  51          ///////////
+  52          extern char pdata BurthDate[6];  //     ={7,5,1,1,1,2};
+  53          extern char NumOfBabies, Units;
+  54          extern char pdata Comm_Buffer[14];      //input buffer 
+  55          extern char pdata BuffZ [4];            // translation buffer
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 2   
+
+  56          extern char BuffLength, Feed_Time, FeedSide, Baby, MemoryReadCunter;
+  57          extern char pdata DateTime[10];
+  58          extern unsigned int Volume ;
+  59          extern int VolumeOf_24H;
+  60          //extern char memory_24_flag;
+  61          
+  62          
+  63          //--------------------------------------------------------
+  64          ///       check if memory ready for writing and reading   
+  65          ///-------------------------------------------------------
+  66          char Memory_Redy(void)
+  67          {
+  68   1      char a;
+  69   1      //      SPI0CFG   = 0x40;         //configer SPI to 00 mode
+  70   1              for (a=0; a<5; a++){
+  71   2                                                      Open_Memory();          // enable memory                        
+  72   2                                                      Fetch_SPI (5);  // call status register addres
+  73   2                                      //              Fetch_SPI (0x00);       // get status register  
+  74   2                                                      if((Fetch_SPI (0) & 0x01)==0)break;                                             
+  75   2                                                      }
+  76   1              Close_Memory();                 // disable memory
+  77   1              if(a < 4) return 1;
+  78   1              else return 0;                                                  //else Error(9);   
+  79   1      }
+  80            
+  81          //--------------------------------------------------------
+  82          ///       geting the next addres (page) for writing the next section  
+  83          ///-------------------------------------------------------
+  84          char GetNextAdd(void)
+  85          {
+  86   1      char a;
+  87   1      
+  88   1              if(Memory_Redy()){
+  89   2                                                      Open_Memory();                          // enable memory
+  90   2                                                      Fetch_SPI (3);                  // read enable
+  91   2                                                      Fetch_SPI (0);                  // addres byte  1
+  92   2                                                      Fetch_SPI (0);                  // addres byte  2
+  93   2                                      //              Fetch_SPI (0);                  // get data byte 1
+  94   2                                                      a = Fetch_SPI (0);                                              
+  95   2                                                      Close_Memory();                                 // close memory
+  96   2                                                      return (a);             //      return NEXT page 
+  97   2                                                      }
+  98   1              else Error(9);
+  99   1      //      else return (0);                //      return 0                                                 
+ 100   1      }
+ 101          
+ 102          /////////////////////////////////////////////////////////
+ 103          /// Write page number in the first byet of the memory
+ 104          /////////////////////////////////////////////////////////
+ 105          void MemAddControl(char Page)
+ 106          {
+ 107   1      char a;
+ 108   1      const char name [] = " Vasa A.T. / Rafael Halfon/ ";            
+ 109   1      
+ 110   1              PrepareWritingMemory ();
+ 111   1      
+ 112   1              Fetch_SPI (0);  // addres 1
+ 113   1              Fetch_SPI (0);  // addres 2
+ 114   1              Fetch_SPI(Page);
+ 115   1              Fetch_SPI(' ');
+ 116   1              Fetch_SPI('/');
+ 117   1              Fetch_SPI(Page+0x30);
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 3   
+
+ 118   1              Fetch_SPI(' ');
+ 119   1              for (a=0;a<27;a++)Fetch_SPI (name [a]);                                                                 
+ 120   1              Close_Memory();         // close memory                                                                                                         
+ 121   1                                              
+ 122   1              
+ 123   1      }
+ 124          
+ 125          
+ 126          /////////////////////////////////////////////////////////
+ 127          /// Write srial number the memory
+ 128          /////////////////////////////////////////////////////////
+ 129          void UpdateSirealNum()
+ 130          {
+ 131   1      char a;
+ 132   1      //const char name [] = "*S/N 000000000000";
+ 133   1      /////////////////////////////////////////////
+ 134   1      
+ 135   1              PrepareWritingMemory ();
+ 136   1              Fetch_SPI (0);  // addres 1
+ 137   1              Fetch_SPI (32); // addres 2
+ 138   1      
+ 139   1              Fetch_SPI (' ');
+ 140   1              Fetch_SPI ('*');
+ 141   1              for(a=0; a<6; a++) Fetch_SPI (BurthDate[a]+0x30);
+ 142   1              Fetch_SPI ('*');
+ 143   1              Fetch_SPI (Units+0x30);
+ 144   1              Fetch_SPI (NumOfBabies+0x30);
+ 145   1              ///////////////////////////////////////////
+ 146   1              Fetch_SPI ('*');        
+ 147   1              Fetch_SPI ('S');
+ 148   1              Fetch_SPI ('/');
+ 149   1              Fetch_SPI ('N');
+ 150   1              Fetch_SPI (' ');
+ 151   1      
+ 152   1              for(a=0; a<12; a++) Fetch_SPI (Comm_Buffer[a+1]);
+ 153   1              Fetch_SPI ('*');                                                                                                                                                                
+ 154   1              Close_Memory();         // close memory         
+ 155   1              
+ 156   1      }
+ 157          
+ 158           /////////////////////////////////////////////////////////
+ 159          /// write to the memory basic parameters burth date units namber of babeis
+ 160          /////////////////////////////////////////////////////////
+ 161          void UpdateBasicMem(void)
+ 162          {
+ 163   1      char a;
+ 164   1      const char name [] = "*S/N 000000000000*   ";
+ 165   1      /////////////////////////////////////////////
+ 166   1      
+ 167   1              PrepareWritingMemory ();
+ 168   1              Fetch_SPI (0);  // addres 1
+ 169   1              Fetch_SPI (32); // addres 2
+ 170   1      
+ 171   1              Fetch_SPI (' ');
+ 172   1              Fetch_SPI ('*');
+ 173   1              for(a=0; a<6; a++) Fetch_SPI (BurthDate[a]+0x30);
+ 174   1              Fetch_SPI ('*');
+ 175   1              Fetch_SPI (Units+0x30);
+ 176   1              Fetch_SPI (NumOfBabies+0x30);
+ 177   1              ///////////////////////////////////////////
+ 178   1                      
+ 179   1      
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 4   
+
+ 180   1              for(a=0; a<21; a++) Fetch_SPI (name [a]);                                                                                                                                                               
+ 181   1              Close_Memory();         // close memory         
+ 182   1              
+ 183   1      }
+ 184          
+ 185          //////////////////////////////////////////////////////////////////
+ 186          //////  get serieal number
+ 187          //////////////////////////////////////////////////////////////
+ 188          
+ 189                  
+ 190          void GetSirealNum()
+ 191          {
+ 192   1      char a;
+ 193   1              if (Memory_Redy()==1){
+ 194   2                                                              Open_Memory();          // open memory                                                          
+ 195   2                                                              Fetch_SPI (3);  // read state                                                   
+ 196   2                                                              Fetch_SPI (0);  // addres 1
+ 197   2                                                              Fetch_SPI (48); // addres 2                                                     
+ 198   2                                                              
+ 199   2                                                      // get from memory S/N
+ 200   2                                                              for (a=0; a<12; a++) Comm_Buffer[a]= (Fetch_SPI(0));                                                                                                                                                                                                                                                                    
+ 201   2                                                              Close_Memory();         // close memory                         
+ 202   2                                                       }
+ 203   1              else Error(9);
+ 204   1      }
+ 205          //////////////////////////////////////////////////////////////////
+ 206          //////  read memory and update  burth day, units number of babies
+ 207          //////////////////////////////////////////////////////////////
+ 208          
+ 209          void ReadMemoryBasic(void)
+ 210          {
+ 211   1      char a;
+ 212   1      //char num[
+ 213   1      
+ 214   1              if (Memory_Redy()==1){
+ 215   2                                                              Open_Memory();          // open memory                                                          
+ 216   2                                                              Fetch_SPI (3);  // read state                                                   
+ 217   2                                                              Fetch_SPI (0);  // addres 1
+ 218   2                                                              Fetch_SPI (34); // addres 2                                                     
+ 219   2                                                              
+ 220   2                                                      // get from memory berth date
+ 221   2                                                              for (a=0; a<6; a++)  (BurthDate[a])= (Fetch_SPI(0)-0x30);
+ 222   2                                                                                              
+ 223   2                                                              Fetch_SPI(0);  //*
+ 224   2                                      
+ 225   2                                                              Units = (Fetch_SPI(0)-0x30);                                                    
+ 226   2                                      
+ 227   2                                                              NumOfBabies=(Fetch_SPI(0)-0x30);                                                                                                                                                                                                                
+ 228   2                                                              Close_Memory();         // close memory                         
+ 229   2                                                       }
+ 230   1              else Error(9);
+ 231   1      }
+ 232          
+ 233          
+ 234          
+ 235          ///--------------------------------------------------------
+ 236          
+ 237          ///// read from memory    
+ 238          ///-------------------------------------------------------
+ 239          
+ 240          
+ 241          void ReadMemory(void)
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 5   
+
+ 242          {
+ 243   1      int a, add;
+ 244   1      char b;
+ 245   1      
+ 246   1              add = GetNextAdd();     //*32;
+ 247   1              add = (add*4);
+ 248   1                                                                                                                                
+ 249   1              if (Memory_Redy()==1){
+ 250   2                                                              Open_Memory();          // open memory                                                          
+ 251   2                                                              Fetch_SPI (3);  // read state                                                   
+ 252   2                                                              Fetch_SPI (0);  // addres 1
+ 253   2                                                              Fetch_SPI (0);  // addres 2
+ 254   2                              //                              MemFlag =1;             // memory falg is to tell the output routin where to
+ 255   2                                                                                              // shift out the LCD buffer
+ 256   2                                                                                                                                                                                               
+ 257   2                                                              for (a=0; a<add; a++){
+ 258   3                                                                                                              for (b=0; b<8; b++)      Comm_Buffer[b]= Fetch_SPI(0);                                                                                                                          
+ 259   3                                                                                                              SentToTherminal();
+ 260   3                                                                                                              }                                               
+ 261   2                                                              Close_Memory();                                                                                                 
+ 262   2                                                       }
+ 263   1              else Error(9);
+ 264   1      }
+ 265          
+ 266          ///--------------------------------------------------------
+ 267          ///       ///     Writing to memory   
+ 268          ///-------------------------------------------------------
+ 269          
+ 270          void Write_SetionTo_Mem(void)
+ 271          {
+ 272   1      char a,b;
+ 273   1      int Addres;
+ 274   1      char Record[25];
+ 275   1      
+ 276   1              b= GetNextAdd();
+ 277   1              Addres = b*32;
+ 278   1              
+ 279   1              PrepareWritingMemory ();        
+ 280   1      
+ 281   1              Fetch_SPI (Addres >> 8);        // addres byte 1
+ 282   1              Fetch_SPI (Addres);                     // addres byte 2
+ 283   1              Record[0] ='@';
+ 284   1                                              
+ 285   1              if(Baby == 1)Record[1] ='1';
+ 286   1              else Record[1] ='2';
+ 287   1              Record[2] ='*';
+ 288   1      
+ 289   1              for (a=9; a>=0; a--) Record[12-a] = (DateTime[a]+0x30);
+ 290   1              
+ 291   1              Record[13] ='*';
+ 292   1              
+ 293   1              if(FeedSide==1)Record[14] ='L';
+ 294   1                      else Record[14] ='R';
+ 295   1              Record[15] ='*';
+ 296   1                                                              
+ 297   1              Tirgom (Feed_Time);
+ 298   1              Record[16] = (BuffZ[2]+0x30);
+ 299   1              Record[17] = (BuffZ[3]+0x30);
+ 300   1              Record[18] ='*';
+ 301   1                                                              
+ 302   1              Tirgom (Volume);                                                                
+ 303   1              Record[19] = (BuffZ[0]+0x30);
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 6   
+
+ 304   1              Record[20] = (BuffZ[1]+0x30);
+ 305   1              Record[21] = (BuffZ[2]+0x30);
+ 306   1              Record[22] = (BuffZ[3]+0x30);
+ 307   1      
+ 308   1              if(Units==1)Record[23] ='O';
+ 309   1                      else Record[23] ='M';
+ 310   1              Record[24] ='@';
+ 311   1      
+ 312   1              for (a=0;a<25;a++)Fetch_SPI(Record[a]);
+ 313   1              Close_Memory();         // close memory
+ 314   1              b++;
+ 315   1              Delay (2);  
+ 316   1              MemAddControl(b);                                               
+ 317   1              
+ 318   1      }
+ 319          
+ 320          /////////////DISPLAY MEMORY SECTION ON THE MONITOR///////
+ 321          ///////////////////////////////////////////////////////////
+ 322          
+ 323          void Fising_Memory ()
+ 324          {
+ 325   1      int Addres;
+ 326   1      char a;
+ 327   1      char memory[25];
+ 328   1      
+ 329   1              Addres = Cal_Memory_Add ();
+ 330   1                                                                                                                        
+ 331   1              if (Memory_Redy()==1){
+ 332   2                                                              Open_Memory();          // open memory                                                          
+ 333   2                                                              Fetch_SPI (3);  // read state                                                   
+ 334   2                                                              Fetch_SPI (Addres >> 8);        // addres byte 1
+ 335   2                                                              Fetch_SPI (Addres);                     // addres byte 2
+ 336   2                              
+ 337   2                                                              for (a=0; a<25; a++) memory[a]= (Fetch_SPI(0)-0x30);
+ 338   2                                                                                                      
+ 339   2                                                              Close_Memory();         // close memory
+ 340   2      
+ 341   2                                                              DateTime[0]     = memory[12];
+ 342   2                                                              DateTime[1]     = memory[11];
+ 343   2                                                              DateTime[2]     = memory[10];
+ 344   2                                                              DateTime[3]     = memory[9];
+ 345   2                                                              DateTime[4]     = memory[8];             
+ 346   2                                                              DateTime[5]     = memory[7];
+ 347   2                                                              DateTime[6]     = memory[6];
+ 348   2                                                              DateTime[7]     = memory[5];
+ 349   2                                                              DateTime[8]     = memory[4];
+ 350   2                                                              DateTime[9]     = memory[3];
+ 351   2      
+ 352   2                                                      
+ 353   2                                                              
+ 354   2                                                              Feed_Time = (memory[16])*10;                                                    
+ 355   2                                                              Feed_Time = Feed_Time+ (memory[17]);
+ 356   2                                                              Volume=0;                //reset volum counter
+ 357   2                                                              Volume =Volume + (memory[19])*1000;                                                             
+ 358   2                                                              Volume =Volume + (memory[20])*100;                                                      
+ 359   2                                                              Volume =Volume + (memory[21])*10;                                       
+ 360   2                                                              Volume =Volume + (memory[22]);
+ 361   2      
+ 362   2                                                              Units = 1;
+ 363   2                                                              if(memory[23]==0x1d)Units = 0;  //matric   // "M" = 0x4d - 0x30 = 0x1d
+ 364   2                                                              FeedSide=0;
+ 365   2                                                              if(memory[14]==0x22)FeedSide=1; //Rhite
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 7   
+
+ 366   2                                                                                                                                                 
+ 367   2              
+ 368   2                                              }
+ 369   1              else Error(9);
+ 370   1      }
+ 371          
+ 372          ///////////////////////////////////////////////////////////
+ 373          ///////////////////////////////////////////////////////////
+ 374          
+ 375          int     Cal_Memory_Add ()
+ 376          {
+ 377   1      int  Addres;
+ 378   1      
+ 379   1              Addres = (GetNextAdd()-MemoryReadCunter);
+ 380   1              if(Addres < 2){
+ 381   2                                              MemoryReadCunter--;
+ 382   2                                              Addres=2;
+ 383   2                                              Longpeep();
+ 384   2                                      }
+ 385   1              Addres = (Addres*32);                    
+ 386   1              return (Addres);        
+ 387   1      }
+ 388          
+ 389          ////////////////////////////////////////////////////////////////////
+ 390          ///////////////////////////////display on monitor//////////////////
+ 391          
+ 392          void DisplayMemory()
+ 393          {
+ 394   1              Fising_Memory ();
+ 395   1              BlankLCD();
+ 396   1      
+ 397   1                      // units
+ 398   1      
+ 399   1              if(Units==0)SEG_care (12,1); //ml ON                                                                                                                            
+ 400   1                      else SEG_care (10,1);     //fl+oz ON                                                                                                                                                                                                                                                                                             
+ 401   1                                                                                                                                                              
+ 402   1                      // bobs side
+ 403   1              if(FeedSide==1)SEG_care (2,1);    //R ON
+ 404   1                      else SEG_care (4,1);                    //L
+ 405   1                                              
+ 406   1              SEG_care (18,1);          //date ON
+ 407   1              SEG_care (15,1);          //time ON
+ 408   1              SEG_care (20,1);                //point ON
+ 409   1              SEG_care (22,1);                //point ON
+ 410   1              SEG_care (16,1);                //:
+ 411   1              ChackBattry();
+ 412   1              SetUpperFigers();                                                                                                       
+ 413   1              PrintLowCharSegment();
+ 414   1              Print_LCD ();
+ 415   1      
+ 416   1      
+ 417   1      }
+ 418          
+ 419          ///////////////////////////////////////////////////////////////////////////////////
+ 420          /////////
+ 421          
+ 422          // write to memory
+ 423          ////////////////////////////////////////////////////
+ 424          
+ 425          void PrepareWritingMemory (void)
+ 426          {
+ 427   1              if(Memory_Redy()==1){
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 8   
+
+ 428   2                                                      Open_Memory();          // open memory                                                                          
+ 429   2                                                      Fetch_SPI (6);  // write enable
+ 430   2                                                      Close_Memory();         // close memory
+ 431   2                                                      Delay (2);              //150   update
+ 432   2                                                      Open_Memory();          // open memory
+ 433   2                                                      Fetch_SPI (2);  // enable writing to memory     
+ 434   2                                              }
+ 435   1              else Error(9);  
+ 436   1      }                                               
+ 437                                                          
+ 438                                                          
+ 439          ///////////////////////////////////////////////////////////////////////////////////
+ 440          ////////// Display_Last_24hr
+ 441          ///////////////////////////////////////////////////////////
+ 442                                                          
+ 443          void Cal_Last_24hr ()
+ 444          {
+ 445   1      char MemoryDay, MemoryHour,NowDay, NowHour;
+ 446   1      char Maddres;
+ 447   1      
+ 448   1              Get_Date_Time();
+ 449   1              Maddres =GetNextAdd();
+ 450   1      // calculat now day & hore 
+ 451   1              NowDay = (10*DateTime[9]) + DateTime[8];
+ 452   1              NowHour = (10*DateTime[3]) + DateTime[2];
+ 453   1      
+ 454   1              for(;;){ 
+ 455   2                              Fising_Memory ();
+ 456   2                              Feed_Time=MemoryReadCunter;
+ 457   2                                       // calculat past day & hour from memory
+ 458   2                              MemoryDay = 10*DateTime[9] + DateTime[8];
+ 459   2                              MemoryHour = 10*DateTime[3] + DateTime[2];
+ 460   2      
+ 461   2                              VolumeOf_24H = VolumeOf_24H + Volume;
+ 462   2      
+ 463   2                              if(   (NowDay-MemoryDay)!= 0  &&  (NowHour-MemoryHour)>0 ) break;       //Display_Last_24hr ();
+ 464   2                              if ((Maddres-MemoryReadCunter) == 2) break;
+ 465   2                              MemoryReadCunter++;
+ 466   2                              }                        
+ 467   1              
+ 468   1              Display_Last_24hr ();            
+ 469   1      
+ 470   1      }
+ 471          
+ 472          
+ 473          ////////////////////////////////////////////////////////
+ 474          ///////// display volume of 24 hours on screen                                          
+ 475          //////////////////////////////////////////////////////////////                                          
+ 476                                                          
+ 477          void Display_Last_24hr ()
+ 478          {
+ 479   1              BlankLCD ();
+ 480   1              Print_LCD ();
+ 481   1              Volume = VolumeOf_24H;
+ 482   1              DateTime[3]=2;
+ 483   1              DateTime[2]=4;
+ 484   1              DateTime[1]=20;
+ 485   1              DateTime[0]=21;
+ 486   1              DateTime[4]=99;
+ 487   1              DateTime[5]=99;
+ 488   1              DateTime[6]=99;
+ 489   1              DateTime[7]=99;
+C51 COMPILER V9.03   MEMORY_MANGMENT_32_0                                                  08/07/2013 13:58:04 PAGE 9   
+
+ 490   1              DateTime[8]=99;
+ 491   1              DateTime[9]=99;
+ 492   1              
+ 493   1              
+ 494   1              SetUpperFigers();
+ 495   1              PrintLowCharSegment();
+ 496   1              if(Units==0)SEG_care (12,1); //ml ON                                                                                                                            
+ 497   1                      else SEG_care (10,1);     //fl+oz ON
+ 498   1      //      SEG_care (23,0);          //upper min OFF
+ 499   1              Print_LCD ();
+ 500   1      }                                               
+ 501                                                          
+ 502          
+ 503          
+ 504          
+ 505                                                          
+ 506                                                          
+ 507                                                          
+ 508                                                          
+ 509                                                          
+ 510                                                          
+ 511                                                                                                                                                                                          
+ 512           
+*** WARNING C291 IN LINE 100 OF Memory_mangment_32_0.c: not every exit path returns a value
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1754    ----
+   CONSTANT SIZE    =     51    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----     126
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

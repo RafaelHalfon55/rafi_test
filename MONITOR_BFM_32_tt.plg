@@ -1,0 +1,149 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+D:\VASA\BFM_MONITOR_PROJECT_7_6_13\SOFTWARE\BFM_REV_32\MONITOR_BFM_32_0.uvproj
+Project File Date:  08/07/2013
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_tt" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_tt" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_tt" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_tt" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(1401): error C141: syntax error near 'void'
+Target not created
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9954
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(925): warning C280: 'a': unreferenced local variable
+BFM_REV_32_0.C(946): error C141: syntax error near 'if'
+BFM_REV_32_0.C(946): error C141: syntax error near '==', expected ')'
+BFM_REV_32_0.C(947): error C141: syntax error near '16'
+BFM_REV_32_0.C(947): error C231: '_SEG_care': redefinition
+BFM_REV_32_0.C(948): error C279: 'Cursor': multiple initialization
+BFM_REV_32_0.C(948): error C231: 'Cursor': redefinition
+BFM_REV_32_0.C(948): error C247: non-address/-constant initializer
+BFM_REV_32_0.C(948): error C231: 'Cursor': redefinition
+BFM_REV_32_0.C(949): error C279: 'Segment': multiple initialization
+BFM_REV_32_0.C(949): error C231: 'Segment': redefinition
+BFM_REV_32_0.C(950): error C141: syntax error near 'switch'
+BFM_REV_32_0.C(950): error C129: missing ';' before '{'
+Target not created
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9910
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9910
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9889
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9892
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9936
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9938
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9938
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
+Build target 'Target 1'
+compiling BFM_REV_32_0.C...
+BFM_REV_32_0.C(100): warning C291: not every exit path returns a value
+linking...
+Program Size: data=17.2 xdata=188 code=9949
+"MONITOR_BFM_32_q" - 0 Error(s), 1 Warning(s).
